@@ -1,8 +1,10 @@
 import { useEffect, useState, useCallback } from 'react';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { LoginForm } from '@/components/auth/LoginForm';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Activity, Database, Server, RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Activity, Database, Server, RefreshCw, CheckCircle2, AlertCircle, LogOut, User as UserIcon } from 'lucide-react';
 
 interface HealthData {
   status: string;
@@ -13,7 +15,8 @@ interface HealthData {
   };
 }
 
-export default function App() {
+function MainContent() {
+  const { user, isAuthenticated, loading: authLoading, logout } = useAuth();
   const [health, setHealth] = useState<HealthData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,21 +48,65 @@ export default function App() {
   }, [apiBaseUrl]);
 
   useEffect(() => {
-    fetchHealth();
-  }, [fetchHealth]);
+    if (isAuthenticated) {
+      fetchHealth();
+    }
+  }, [isAuthenticated, fetchHealth]);
+
+  if (authLoading) {
+    return (
+      <main className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex items-center gap-3 text-slate-500 text-sm animate-pulse">
+          <span className="w-5 h-5 border-2 border-slate-600 border-t-transparent rounded-full animate-spin" />
+          Restoring session...
+        </div>
+      </main>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <main className="min-h-screen bg-slate-50 p-6 flex flex-col items-center justify-center">
+        <div className="w-full max-w-md space-y-6">
+          <header className="text-center space-y-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700">
+              <Activity className="w-3.5 h-3.5 text-blue-600" />
+              Issue #2 — Authentication Layer
+            </div>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">SupportDesk Mini</h1>
+            <p className="text-sm text-slate-500">
+              Internal IT Support Ticket Management System
+            </p>
+          </header>
+
+          <LoginForm />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-slate-50 p-6 md:p-12 flex flex-col items-center justify-center">
       <div className="w-full max-w-2xl space-y-6">
-        <header className="text-center space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700">
-            <Activity className="w-3.5 h-3.5 text-blue-600" />
-            Issue #1 — Development Environment Ready
+        <header className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-700 font-bold">
+              <UserIcon className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-bold text-slate-900">{user?.name}</h2>
+                <Badge variant={user?.role === 'admin' ? 'destructive' : user?.role === 'agent' ? 'secondary' : 'outline'}>
+                  {user?.role}
+                </Badge>
+              </div>
+              <p className="text-xs text-slate-500">{user?.email}</p>
+            </div>
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">SupportDesk Mini</h1>
-          <p className="text-sm text-slate-500">
-            Internal IT Support Ticket Management System
-          </p>
+          <Button variant="outline" size="sm" onClick={logout} className="shrink-0 text-slate-700 hover:text-slate-900">
+            <LogOut className="w-4 h-4 mr-2" />
+            Sign Out
+          </Button>
         </header>
 
         <Card className="shadow-sm border-slate-200">
@@ -68,10 +115,10 @@ export default function App() {
               <div>
                 <CardTitle className="text-xl flex items-center gap-2">
                   <Server className="w-5 h-5 text-slate-700" />
-                  System Health Status
+                  System Health & Authenticated Session
                 </CardTitle>
                 <CardDescription>
-                  Live verification of frontend-to-backend communication
+                  Live verification of authenticated API state
                 </CardDescription>
               </div>
               <Button
@@ -153,10 +200,10 @@ export default function App() {
 
                 <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-1">
                   <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                    Last Checked
+                    Authenticated As
                   </span>
-                  <div className="text-xs font-mono text-slate-700 truncate" title={health.timestamp}>
-                    {new Date(health.timestamp).toLocaleTimeString()} ({new Date(health.timestamp).toLocaleDateString()})
+                  <div className="text-xs font-mono text-slate-700 truncate" title={user?.email}>
+                    {user?.email} ({user?.role})
                   </div>
                 </div>
               </div>
@@ -164,11 +211,19 @@ export default function App() {
 
             <div className="border-t border-slate-100 pt-4 text-xs text-slate-500 space-y-1">
               <p><span className="font-semibold text-slate-700">Frontend Base URL:</span> <code className="bg-slate-100 px-1.5 py-0.5 rounded">{apiBaseUrl}</code></p>
-              <p><span className="font-semibold text-slate-700">Docker Architecture:</span> React SPA (Node 22) → Laravel 12 API → MySQL 8.0</p>
+              <p><span className="font-semibold text-slate-700">Auth Token Transport:</span> Sanctum Bearer Token (localStorage)</p>
             </div>
           </CardContent>
         </Card>
       </div>
     </main>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <MainContent />
+    </AuthProvider>
   );
 }
