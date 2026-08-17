@@ -13,11 +13,32 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Development-Only Seed Accounts
+        User::updateOrCreate(
+            ['email' => 'admin@supportdesk.local'],
+            [
+                'name' => 'Administrator',
+                'password' => 'password123',
+                'role' => 'admin',
+            ]
+        );
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        User::updateOrCreate(
+            ['email' => 'agent@supportdesk.local'],
+            [
+                'name' => 'Support Agent',
+                'password' => 'password123',
+                'role' => 'agent',
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'requester@supportdesk.local'],
+            [
+                'name' => 'Jane Requester',
+                'password' => 'password123',
+                'role' => 'requester',
+            ]
+        );
     }
 }
