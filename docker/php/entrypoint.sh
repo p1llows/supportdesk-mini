@@ -5,7 +5,10 @@ cd /var/www/html
 
 if [ ! -f "vendor/autoload.php" ]; then
     echo "Installing Composer dependencies..."
-    composer install --no-interaction --prefer-dist --optimize-autoloader
+    if ! composer install --no-interaction --prefer-dist --optimize-autoloader; then
+        echo "Lockfile platform mismatch detected. Updating dependencies for container environment..."
+        composer update --no-interaction --prefer-dist --optimize-autoloader
+    fi
 fi
 
 if [ ! -f ".env" ]; then

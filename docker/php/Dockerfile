@@ -1,4 +1,4 @@
-FROM php:8.3-cli-bookworm
+FROM php:8.4-cli-bookworm
 
 # Install system dependencies and PHP extensions required for Laravel 12
 RUN apt-get update && apt-get install -y \
