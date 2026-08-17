@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Lock, LogIn, AlertCircle } from 'lucide-react';
+import { Lock, LogIn, AlertCircle, UserPlus } from 'lucide-react';
 
 export const LoginForm: React.FC = () => {
   const { login } = useAuth();
@@ -99,6 +100,16 @@ export const LoginForm: React.FC = () => {
             )}
           </Button>
         </form>
+
+        <div className="mt-6 border-t border-slate-100 pt-4 text-center text-xs text-slate-500">
+          Don't have an account?{' '}
+          <Link
+            to="/register"
+            className="font-semibold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 ml-1 hover:underline"
+          >
+            <UserPlus className="w-3 h-3" /> Create Account
+          </Link>
+        </div>
       </CardContent>
     </Card>
   );
