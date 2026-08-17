@@ -1,20 +1,46 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { UserPlus, ArrowLeft, Info } from 'lucide-react';
+import { UserPlus, ArrowLeft, AlertCircle } from 'lucide-react';
 
 export const RegisterPage = () => {
+  const { register } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [notice, setNotice] = useState<string | null>(null);
+  const [passwordConfirmation, setPasswordConfirmation] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setNotice('Registration workflow and user creation will be implemented in Issue #4. Please use the Sign In link below to log in.');
+    setError(null);
+
+    if (!name.trim() || !email.trim() || !password || !passwordConfirmation) {
+      setError('Please fill in all required fields.');
+      return;
+    }
+
+    if (password !== passwordConfirmation) {
+      setError('Passwords do not match.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await register(name, email, password, passwordConfirmation);
+      if (!result.success) {
+        setError(result.error || 'Registration failed. Please try again.');
+      }
+    } catch {
+      setError('An unexpected error occurred during registration.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -41,10 +67,10 @@ export const RegisterPage = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {notice && (
-              <div className="p-3 rounded-md bg-blue-50 border border-blue-200 text-blue-800 text-xs flex items-start gap-2">
-                <Info className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
-                <span>{notice}</span>
+            {error && (
+              <div className="p-3 rounded-md bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
+                <span>{error}</span>
               </div>
             )}
 
@@ -56,6 +82,7 @@ export const RegisterPage = () => {
                 placeholder="Jane Doe"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                disabled={loading}
                 required
               />
             </div>
@@ -68,6 +95,7 @@ export const RegisterPage = () => {
                 placeholder="requester@supportdesk.local"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
                 required
               />
             </div>
@@ -80,13 +108,36 @@ export const RegisterPage = () => {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
                 required
               />
             </div>
 
-            <Button type="submit" className="w-full">
-              <UserPlus className="w-4 h-4 mr-2" />
-              Register Account
+            <div className="space-y-1.5">
+              <Label htmlFor="reg-password-confirm">Confirm Password</Label>
+              <Input
+                id="reg-password-confirm"
+                type="password"
+                placeholder="••••••••"
+                value={passwordConfirmation}
+                onChange={(e) => setPasswordConfirmation(e.target.value)}
+                disabled={loading}
+                required
+              />
+            </div>
+
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Creating Account...
+                </span>
+              ) : (
+                <span className="flex items-center justify-center gap-2">
+                  <UserPlus className="w-4 h-4" />
+                  Register Account
+                </span>
+              )}
             </Button>
           </form>
 

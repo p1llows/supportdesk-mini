@@ -13,6 +13,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  register: (name: string, email: string, password: string, password_confirmation: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
 }
 
@@ -103,6 +104,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const register = async (name: string, email: string, password: string, password_confirmation: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/v1/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password, password_confirmation }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.status === 'success') {
+        const authToken = data.data.token;
+        const userData = data.data.user;
+
+        setToken(authToken);
+        setUser(userData);
+        localStorage.setItem('auth_token', authToken);
+        localStorage.setItem('auth_user', JSON.stringify(userData));
+
+        return { success: true };
+      } else {
+        const errorMessage = data.errors ? Object.values(data.errors).flat().join(' ') : (data.message || 'Registration failed.');
+        return {
+          success: false,
+          error: errorMessage,
+        };
+      }
+    } catch (err: unknown) {
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : 'Network error. Failed to connect to server.',
+      };
+    }
+  };
+
   const logout = async (): Promise<void> => {
     if (token) {
       try {
@@ -132,6 +171,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated: !!user && !!token,
         loading,
         login,
+        register,
         logout,
       }}
     >
