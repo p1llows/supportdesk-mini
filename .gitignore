@@ -1,0 +1,23 @@
+# Local Environment Files
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env
+
+# Dependencies & Build Artifacts
+**/node_modules/
+**/vendor/
+**/dist/
+**/public/storage/
+**/storage/*.key
+**/.phpunit.cache/
+
+# OS & IDE Files
+.DS_Store
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
