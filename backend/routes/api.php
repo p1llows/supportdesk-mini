@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/v1/health', [HealthController::class, 'check']);
 
 // Authentication Routes
+Route::post('/v1/auth/register', [AuthController::class, 'register']);
 Route::post('/v1/auth/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
