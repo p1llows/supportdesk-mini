@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
-import { AuthenticatedPlaceholder } from '@/components/dashboard/AuthenticatedPlaceholder';
+import { DashboardPage } from '@/pages/DashboardPage';
 
 // Guest Guard: Allows unauthenticated access, redirects authenticated users to /
 const GuestRoute = ({ children }: { children: React.ReactNode }) => {
@@ -76,7 +76,7 @@ export const AppRouter = () => {
           path="/"
           element={
             <ProtectedRoute>
-              <AuthenticatedPlaceholder />
+              <DashboardPage />
             </ProtectedRoute>
           }
         />
