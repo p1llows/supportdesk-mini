@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Ticket;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -43,7 +44,19 @@ class DashboardController extends Controller
             ], 403);
         }
 
-        // Ticket metrics safely return 0 since Ticket model/table will be added in Issue #6/#8
+        // Build live ticket metrics query based on active scope and role
+        $query = Ticket::query();
+
+        if ($userRole === 'requester' || $activeScope === 'requester') {
+            $query->where('user_id', $user->id);
+        }
+
+        $totalTickets = (clone $query)->count();
+        $openTickets = (clone $query)->where('status', 'open')->count();
+        $inProgressTickets = (clone $query)->where('status', 'in_progress')->count();
+        $resolvedTickets = (clone $query)->where('status', 'resolved')->count();
+        $closedTickets = (clone $query)->where('status', 'closed')->count();
+
         return response()->json([
             'status' => 'success',
             'data' => [
@@ -56,11 +69,11 @@ class DashboardController extends Controller
                 'active_scope' => $activeScope,
                 'permitted_scopes' => $permittedScopes,
                 'stats' => [
-                    'total_tickets' => 0,
-                    'open_tickets' => 0,
-                    'in_progress_tickets' => 0,
-                    'resolved_tickets' => 0,
-                    'closed_tickets' => 0,
+                    'total_tickets' => $totalTickets,
+                    'open_tickets' => $openTickets,
+                    'in_progress_tickets' => $inProgressTickets,
+                    'resolved_tickets' => $resolvedTickets,
+                    'closed_tickets' => $closedTickets,
                 ],
             ],
         ]);
