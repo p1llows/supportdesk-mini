@@ -3,6 +3,8 @@ import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { CreateTicketModal } from '@/components/tickets/CreateTicketModal';
+import { TicketsTable, type TicketData } from '@/components/tickets/TicketsTable';
 import {
   Ticket,
   Clock,
@@ -40,12 +42,22 @@ interface DashboardApiResponse {
   message?: string;
 }
 
+interface TicketsApiResponse {
+  status: string;
+  data: {
+    tickets: TicketData[];
+  };
+}
+
 export const DashboardPage = () => {
   const { user, token, logout } = useAuth();
   const [data, setData] = useState<DashboardApiResponse['data'] | null>(null);
+  const [tickets, setTickets] = useState<TicketData[]>([]);
   const [activeScope, setActiveScope] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
+  const [ticketsLoading, setTicketsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
@@ -80,8 +92,38 @@ export const DashboardPage = () => {
     }
   }, [apiBaseUrl, token, activeScope]);
 
+  const fetchTickets = useCallback(async () => {
+    if (!token) return;
+    setTicketsLoading(true);
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/v1/tickets`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+        },
+      });
+
+      const result: TicketsApiResponse = await response.json();
+
+      if (response.ok && result.status === 'success') {
+        setTickets(result.data.tickets);
+      }
+    } catch {
+      // Tickets error handled gracefully in table component
+    } finally {
+      setTicketsLoading(false);
+    }
+  }, [apiBaseUrl, token]);
+
+  const handleRefreshAll = () => {
+    fetchStats();
+    fetchTickets();
+  };
+
   useEffect(() => {
     fetchStats();
+    fetchTickets();
   }, []);
 
   const handleScopeChange = (newScope: string) => {
@@ -124,12 +166,12 @@ export const DashboardPage = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => fetchStats()}
-            disabled={loading}
+            onClick={handleRefreshAll}
+            disabled={loading || ticketsLoading}
             className="text-slate-700 hover:text-slate-900"
           >
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh Stats
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading || ticketsLoading ? 'animate-spin' : ''}`} />
+            Refresh
           </Button>
           <Button variant="ghost" size="sm" onClick={logout} className="text-slate-700 hover:text-slate-900">
             <LogOut className="w-4 h-4 mr-2" />
@@ -143,17 +185,21 @@ export const DashboardPage = () => {
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-slate-900">Support Desk Dashboard</h2>
           <p className="text-sm text-slate-500">
-            Role-scoped ticket overview and queue performance metrics (Issue #5)
+            Role-scoped ticket overview and queue performance metrics
           </p>
         </div>
 
-        {/* Disabled Submit Ticket Placeholder for Issue #6 */}
-        <div className="inline-flex items-center gap-2" title="Ticket submission will be added in Issue #6">
-          <Button disabled variant="default" className="opacity-70 cursor-not-allowed">
+        {/* Submit Ticket Action — Restricted strictly to Requesters */}
+        {user?.role === 'requester' && (
+          <Button
+            onClick={() => setIsModalOpen(true)}
+            variant="default"
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+          >
             <PlusCircle className="w-4 h-4 mr-2" />
-            Submit New Ticket (Issue #6)
+            Submit New Ticket
           </Button>
-        </div>
+        )}
       </section>
 
       {/* Role Filter Controls */}
@@ -279,19 +325,17 @@ export const DashboardPage = () => {
         </Card>
       </section>
 
-      {/* Information Banner */}
-      <footer className="p-4 rounded-lg bg-slate-100 border border-slate-200 text-xs text-slate-600 space-y-1">
-        <p className="font-semibold text-slate-700">Issue #5 Implementation Status:</p>
-        <p>
-          • <span className="font-medium text-slate-700">Backend API:</span> `GET /api/v1/dashboard/stats?scope=...` (Protected by Sanctum)
-        </p>
-        <p>
-          • <span className="font-medium text-slate-700">Role Scoping:</span> Backend authorizes requested scopes based on logged-in user role ({user?.role})
-        </p>
-        <p>
-          • <span className="font-medium text-slate-700">Next Milestone:</span> Ticket creation tables, modals, and ticket submission will be implemented in Issue #6.
-        </p>
-      </footer>
+      {/* Tickets Table Component */}
+      <section>
+        <TicketsTable tickets={tickets} loading={ticketsLoading} />
+      </section>
+
+      {/* Create Ticket Modal */}
+      <CreateTicketModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={handleRefreshAll}
+      />
     </main>
   );
 };
