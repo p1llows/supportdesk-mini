@@ -1,6 +1,6 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Ticket, Clock, CheckCircle2, AlertCircle, User as UserIcon } from 'lucide-react';
+import { Ticket, Clock, CheckCircle2, AlertCircle, User as UserIcon, Building2 } from 'lucide-react';
 
 export interface TicketData {
   id: number;
@@ -8,7 +8,10 @@ export interface TicketData {
   description: string;
   priority: 'low' | 'medium' | 'high';
   status: 'open' | 'in_progress' | 'resolved' | 'closed';
-  department: string | null;
+  department?: {
+    id: number;
+    name: string;
+  } | null;
   requester?: {
     id: number;
     name: string;
@@ -130,6 +133,7 @@ export const TicketsTable: React.FC<TicketsTableProps> = ({ tickets, loading }) 
             <tr>
               <th className="px-4 py-3">ID</th>
               <th className="px-4 py-3">Title & Description</th>
+              <th className="px-4 py-3">Department</th>
               <th className="px-4 py-3">Requester</th>
               <th className="px-4 py-3">Priority</th>
               <th className="px-4 py-3">Status</th>
@@ -149,6 +153,16 @@ export const TicketsTable: React.FC<TicketsTableProps> = ({ tickets, loading }) 
                   <div className="text-slate-500 line-clamp-1 text-xs mt-0.5">
                     {ticket.description}
                   </div>
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap">
+                  {ticket.department ? (
+                    <Badge variant="outline" className="bg-slate-100 text-slate-700 border-slate-300 font-medium">
+                      <Building2 className="w-3 h-3 mr-1 text-slate-500 inline" />
+                      {ticket.department.name}
+                    </Badge>
+                  ) : (
+                    <span className="text-slate-400">—</span>
+                  )}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
                   {ticket.requester ? (
