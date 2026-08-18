@@ -45,15 +45,6 @@ class DepartmentTest extends TestCase
         $departments = $response->json('data.departments');
         $departmentNames = array_column($departments, 'name');
 
-        $expectedDepartments = [
-            'Customer Support',
-            'Facilities',
-            'Finance',
-            'Human Resources',
-            'Information Technology',
-            'Operations',
-        ];
-
         $this->assertContains('Information Technology', $departmentNames);
         $this->assertContains('Human Resources', $departmentNames);
         $this->assertContains('Finance', $departmentNames);
