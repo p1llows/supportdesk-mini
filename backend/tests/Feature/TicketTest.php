@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Department;
 use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -10,6 +11,17 @@ use Tests\TestCase;
 class TicketTest extends TestCase
 {
     use RefreshDatabase;
+
+    private function getDepartmentId(): int
+    {
+        $dept = Department::first();
+        if (! $dept) {
+            $this->seed(\Database\Seeders\DepartmentSeeder::class);
+            $dept = Department::first();
+        }
+
+        return $dept->id;
+    }
 
     public function test_unauthenticated_user_cannot_access_tickets_list(): void
     {
@@ -24,6 +36,7 @@ class TicketTest extends TestCase
             'title' => 'Test Ticket',
             'description' => 'Test Description',
             'priority' => 'medium',
+            'department_id' => $this->getDepartmentId(),
         ]);
 
         $response->assertStatus(401);
@@ -32,12 +45,14 @@ class TicketTest extends TestCase
     public function test_requester_can_create_ticket(): void
     {
         $requester = User::factory()->create(['role' => 'requester']);
+        $deptId = $this->getDepartmentId();
 
         $response = $this->actingAs($requester, 'sanctum')
             ->postJson('/api/v1/tickets', [
                 'title' => 'VPN connection drops frequently',
                 'description' => 'Cannot maintain connection past 10 minutes.',
                 'priority' => 'high',
+                'department_id' => $deptId,
             ]);
 
         $response->assertStatus(201)
@@ -47,6 +62,7 @@ class TicketTest extends TestCase
                 'data' => [
                     'ticket' => [
                         'user_id' => $requester->id,
+                        'department_id' => $deptId,
                         'title' => 'VPN connection drops frequently',
                         'description' => 'Cannot maintain connection past 10 minutes.',
                         'priority' => 'high',
@@ -57,6 +73,7 @@ class TicketTest extends TestCase
 
         $this->assertDatabaseHas('tickets', [
             'user_id' => $requester->id,
+            'department_id' => $deptId,
             'title' => 'VPN connection drops frequently',
             'status' => 'open',
         ]);
@@ -71,6 +88,7 @@ class TicketTest extends TestCase
                 'title' => 'Admin Ticket Attempt',
                 'description' => 'Should be blocked with 403',
                 'priority' => 'low',
+                'department_id' => $this->getDepartmentId(),
             ]);
 
         $response->assertStatus(403)
@@ -93,6 +111,7 @@ class TicketTest extends TestCase
                 'title' => 'Agent Ticket Attempt',
                 'description' => 'Should be blocked with 403',
                 'priority' => 'medium',
+                'department_id' => $this->getDepartmentId(),
             ]);
 
         $response->assertStatus(403)
@@ -114,6 +133,7 @@ class TicketTest extends TestCase
             ->postJson('/api/v1/tickets', [
                 'description' => 'Missing title field',
                 'priority' => 'medium',
+                'department_id' => $this->getDepartmentId(),
             ]);
 
         $response->assertStatus(422)
@@ -128,6 +148,7 @@ class TicketTest extends TestCase
             ->postJson('/api/v1/tickets', [
                 'title' => 'Missing Description',
                 'priority' => 'medium',
+                'department_id' => $this->getDepartmentId(),
             ]);
 
         $response->assertStatus(422)
@@ -143,6 +164,7 @@ class TicketTest extends TestCase
                 'title' => 'Invalid Priority Ticket',
                 'description' => 'Some description',
                 'priority' => 'critical', // Invalid enum value
+                'department_id' => $this->getDepartmentId(),
             ]);
 
         $response->assertStatus(422)
@@ -152,6 +174,7 @@ class TicketTest extends TestCase
     public function test_ticket_status_defaults_to_open_and_ignores_client_status(): void
     {
         $requester = User::factory()->create(['role' => 'requester']);
+        $deptId = $this->getDepartmentId();
 
         $response = $this->actingAs($requester, 'sanctum')
             ->postJson('/api/v1/tickets', [
@@ -159,6 +182,7 @@ class TicketTest extends TestCase
                 'description' => 'Attempting to set status to closed upon creation',
                 'priority' => 'low',
                 'status' => 'closed', // Client payload attempt
+                'department_id' => $deptId,
             ]);
 
         $response->assertStatus(201)
@@ -180,6 +204,7 @@ class TicketTest extends TestCase
     {
         $requester = User::factory()->create(['role' => 'requester']);
         $otherUser = User::factory()->create(['role' => 'requester']);
+        $deptId = $this->getDepartmentId();
 
         $response = $this->actingAs($requester, 'sanctum')
             ->postJson('/api/v1/tickets', [
@@ -187,6 +212,7 @@ class TicketTest extends TestCase
                 'title' => 'Forged User ID Attempt',
                 'description' => 'Attempting to assign ticket to another user',
                 'priority' => 'high',
+                'department_id' => $deptId,
             ]);
 
         $response->assertStatus(201)
@@ -208,9 +234,11 @@ class TicketTest extends TestCase
     {
         $requester1 = User::factory()->create(['role' => 'requester']);
         $requester2 = User::factory()->create(['role' => 'requester']);
+        $deptId = $this->getDepartmentId();
 
         Ticket::create([
             'user_id' => $requester1->id,
+            'department_id' => $deptId,
             'title' => 'Requester 1 Ticket',
             'description' => 'Description 1',
             'priority' => 'medium',
@@ -219,6 +247,7 @@ class TicketTest extends TestCase
 
         Ticket::create([
             'user_id' => $requester2->id,
+            'department_id' => $deptId,
             'title' => 'Requester 2 Ticket',
             'description' => 'Description 2',
             'priority' => 'high',
@@ -240,9 +269,11 @@ class TicketTest extends TestCase
         $admin = User::factory()->create(['role' => 'admin']);
         $requester1 = User::factory()->create(['role' => 'requester']);
         $requester2 = User::factory()->create(['role' => 'requester']);
+        $deptId = $this->getDepartmentId();
 
         Ticket::create([
             'user_id' => $requester1->id,
+            'department_id' => $deptId,
             'title' => 'Ticket A',
             'description' => 'Description A',
             'priority' => 'low',
@@ -251,6 +282,7 @@ class TicketTest extends TestCase
 
         Ticket::create([
             'user_id' => $requester2->id,
+            'department_id' => $deptId,
             'title' => 'Ticket B',
             'description' => 'Description B',
             'priority' => 'high',

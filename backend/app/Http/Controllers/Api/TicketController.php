@@ -17,7 +17,10 @@ class TicketController extends Controller
     {
         $user = $request->user();
 
-        $query = Ticket::with('user:id,name,email')->orderBy('created_at', 'desc');
+        $query = Ticket::with([
+            'user:id,name,email',
+            'department:id,name',
+        ])->orderBy('created_at', 'desc');
 
         // Requesters can only view their own submitted tickets
         if ($user->role === 'requester') {
@@ -36,7 +39,10 @@ class TicketController extends Controller
                         'description' => $ticket->description,
                         'priority' => $ticket->priority,
                         'status' => $ticket->status,
-                        'department' => $ticket->department,
+                        'department' => $ticket->department ? [
+                            'id' => $ticket->department->id,
+                            'name' => $ticket->department->name,
+                        ] : null,
                         'requester' => $ticket->user ? [
                             'id' => $ticket->user->id,
                             'name' => $ticket->user->name,
@@ -69,17 +75,19 @@ class TicketController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
             'priority' => ['required', 'string', Rule::in(['low', 'medium', 'high'])],
-            'department' => ['nullable', 'string', 'max:255'],
+            'department_id' => ['required', 'integer', Rule::exists('departments', 'id')],
         ]);
 
         $ticket = Ticket::create([
             'user_id' => $user->id, // Force server-side user ownership from Sanctum token
+            'department_id' => $validated['department_id'],
             'title' => $validated['title'],
             'description' => $validated['description'],
             'priority' => $validated['priority'],
-            'department' => $validated['department'] ?? null,
             'status' => 'open', // Force default status to open
         ]);
+
+        $ticket->load('department:id,name');
 
         return response()->json([
             'status' => 'success',
@@ -88,11 +96,15 @@ class TicketController extends Controller
                 'ticket' => [
                     'id' => $ticket->id,
                     'user_id' => $ticket->user_id,
+                    'department_id' => $ticket->department_id,
                     'title' => $ticket->title,
                     'description' => $ticket->description,
                     'priority' => $ticket->priority,
                     'status' => $ticket->status,
-                    'department' => $ticket->department,
+                    'department' => $ticket->department ? [
+                        'id' => $ticket->department->id,
+                        'name' => $ticket->department->name,
+                    ] : null,
                     'created_at' => $ticket->created_at?->toISOString(),
                     'updated_at' => $ticket->updated_at?->toISOString(),
                 ],

@@ -13,6 +13,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Seed default departments
+        $this->call(DepartmentSeeder::class);
+
         // Development-Only Seed Accounts
         User::updateOrCreate(
             ['email' => 'admin@supportdesk.local'],

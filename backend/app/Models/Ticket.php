@@ -17,12 +17,22 @@ class Ticket extends Model
      */
     protected $fillable = [
         'user_id',
-        'department',
+        'department_id',
         'title',
         'description',
         'priority',
         'status',
     ];
+
+    /**
+     * Get the department that this ticket is assigned to.
+     *
+     * @return BelongsTo<Department, $this>
+     */
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class);
+    }
 
     /**
      * Get the user (requester) that submitted the ticket.
