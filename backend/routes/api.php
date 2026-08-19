@@ -32,7 +32,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Department Routes (Issue #7)
     Route::get('/v1/departments', [DepartmentController::class, 'index']);
 
-    // Ticket Routes (Issue #6 / #7)
+    // Ticket Routes (Issue #6 / #7 / #12)
     Route::post('/v1/tickets', [TicketController::class, 'store']);
     Route::get('/v1/tickets', [TicketController::class, 'index']);
+    Route::put('/v1/tickets/{ticket}', [TicketController::class, 'update']);
+    Route::delete('/v1/tickets/{ticket}', [TicketController::class, 'destroy']);
 });

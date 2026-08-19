@@ -142,4 +142,92 @@ class TicketController extends Controller
             ],
         ], 201);
     }
+
+    /**
+     * Update an existing ticket (Issue #12).
+     */
+    public function update(Request $request, Ticket $ticket): JsonResponse
+    {
+        $user = $request->user();
+
+        // 1. Universal Closed Ticket Lock: No role may modify a closed ticket
+        if ($ticket->status === 'closed') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Closed tickets cannot be modified',
+            ], 403);
+        }
+
+        // 2. Role & Ownership Authorization
+        if ($user->role === 'requester') {
+            // Requesters can only edit their own tickets and only when status is 'open'
+            if ($ticket->user_id !== $user->id || $ticket->status !== 'open') {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Requesters can only edit their own open tickets',
+                ], 403);
+            }
+        }
+
+        // 3. Validation (status is explicitly excluded to ensure status immutability)
+        $validated = $request->validate([
+            'title' => ['sometimes', 'required', 'string', 'max:255'],
+            'description' => ['sometimes', 'required', 'string'],
+            'priority' => ['sometimes', 'required', 'string', Rule::in(['low', 'medium', 'high'])],
+            'department_id' => ['sometimes', 'required', 'integer', Rule::exists('departments', 'id')],
+        ]);
+
+        $ticket->update($validated);
+        $ticket->load(['department:id,name', 'user:id,name,email']);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Ticket updated successfully',
+            'data' => [
+                'ticket' => [
+                    'id' => $ticket->id,
+                    'user_id' => $ticket->user_id,
+                    'department_id' => $ticket->department_id,
+                    'title' => $ticket->title,
+                    'description' => $ticket->description,
+                    'priority' => $ticket->priority,
+                    'status' => $ticket->status,
+                    'department' => $ticket->department ? [
+                        'id' => $ticket->department->id,
+                        'name' => $ticket->department->name,
+                    ] : null,
+                    'requester' => $ticket->user ? [
+                        'id' => $ticket->user->id,
+                        'name' => $ticket->user->name,
+                        'email' => $ticket->user->email,
+                    ] : null,
+                    'created_at' => $ticket->created_at?->toISOString(),
+                    'updated_at' => $ticket->updated_at?->toISOString(),
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * Delete an existing ticket (Administrators only - Issue #12).
+     */
+    public function destroy(Request $request, Ticket $ticket): JsonResponse
+    {
+        $user = $request->user();
+
+        // Enforce backend authorization: Only administrators can delete tickets
+        if ($user->role !== 'admin') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Only administrators are authorized to delete tickets',
+            ], 403);
+        }
+
+        $ticket->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Ticket deleted successfully',
+        ]);
+    }
 }
