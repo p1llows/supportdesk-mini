@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { CreateTicketModal } from '@/components/tickets/CreateTicketModal';
 import { TicketsTable, type TicketData } from '@/components/tickets/TicketsTable';
 import { TicketFilters, type DepartmentOption } from '@/components/tickets/TicketFilters';
+import { UsersTable, type UserData } from '@/components/users/UsersTable';
 import {
   Ticket,
   Clock,
@@ -50,6 +51,13 @@ interface TicketsApiResponse {
   };
 }
 
+interface UsersApiResponse {
+  status: string;
+  data: {
+    users: UserData[];
+  };
+}
+
 export const DashboardPage = () => {
   const { user, token, logout } = useAuth();
   const [data, setData] = useState<DashboardApiResponse['data'] | null>(null);
@@ -67,6 +75,10 @@ export const DashboardPage = () => {
   const [priorityFilter, setPriorityFilter] = useState<string>('');
   const [departmentIdFilter, setDepartmentIdFilter] = useState<string>('');
   const [departments, setDepartments] = useState<DepartmentOption[]>([]);
+
+  // Users Directory State (Issue #9)
+  const [usersList, setUsersList] = useState<UserData[]>([]);
+  const [usersLoading, setUsersLoading] = useState<boolean>(false);
 
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
@@ -166,13 +178,44 @@ export const DashboardPage = () => {
     }
   }, [apiBaseUrl, token, debouncedSearch, statusFilter, priorityFilter, departmentIdFilter]);
 
+  // Fetch system users directory for Admin and Agent roles (Issue #9)
+  const fetchUsers = useCallback(async () => {
+    if (!token || !user || (user.role !== 'admin' && user.role !== 'agent')) return;
+    setUsersLoading(true);
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/v1/users`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+        },
+      });
+
+      const result: UsersApiResponse = await response.json();
+
+      if (response.ok && result.status === 'success') {
+        setUsersList(result.data.users || []);
+      }
+    } catch {
+      // Handled gracefully
+    } finally {
+      setUsersLoading(false);
+    }
+  }, [apiBaseUrl, token, user]);
+
   const handleRefreshAll = () => {
     fetchStats();
     fetchTickets();
+    if (user?.role === 'admin' || user?.role === 'agent') {
+      fetchUsers();
+    }
   };
 
   useEffect(() => {
     fetchStats();
+    if (user?.role === 'admin' || user?.role === 'agent') {
+      fetchUsers();
+    }
   }, []);
 
   useEffect(() => {
@@ -235,10 +278,10 @@ export const DashboardPage = () => {
             variant="outline"
             size="sm"
             onClick={handleRefreshAll}
-            disabled={loading || ticketsLoading}
+            disabled={loading || ticketsLoading || usersLoading}
             className="text-slate-700 hover:text-slate-900"
           >
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading || ticketsLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading || ticketsLoading || usersLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
           <Button variant="ghost" size="sm" onClick={logout} className="text-slate-700 hover:text-slate-900">
@@ -413,6 +456,13 @@ export const DashboardPage = () => {
       <section>
         <TicketsTable tickets={tickets} loading={ticketsLoading} />
       </section>
+
+      {/* Users Directory Table Component — Rendered for Admin and Support Agent users (Issue #9) */}
+      {(user?.role === 'admin' || user?.role === 'agent') && (
+        <section className="pt-2">
+          <UsersTable users={usersList} loading={usersLoading} />
+        </section>
+      )}
 
       {/* Create Ticket Modal */}
       <CreateTicketModal
