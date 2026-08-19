@@ -1,6 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import { Badge } from '@/components/ui/badge';
-import { Ticket, Clock, CheckCircle2, AlertCircle, User as UserIcon, Building2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Ticket,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  User as UserIcon,
+  Building2,
+  Edit3,
+  Trash2,
+  X,
+} from 'lucide-react';
 
 export interface TicketData {
   id: number;
@@ -24,9 +36,19 @@ export interface TicketData {
 interface TicketsTableProps {
   tickets: TicketData[];
   loading: boolean;
+  onEditTicket?: (ticket: TicketData) => void;
+  onDeleteTicket?: (ticket: TicketData) => void;
 }
 
-export const TicketsTable: React.FC<TicketsTableProps> = ({ tickets, loading }) => {
+export const TicketsTable: React.FC<TicketsTableProps> = ({
+  tickets,
+  loading,
+  onEditTicket,
+  onDeleteTicket,
+}) => {
+  const { user } = useAuth();
+  const [ticketToDelete, setTicketToDelete] = useState<TicketData | null>(null);
+
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
       case 'high':
@@ -81,6 +103,26 @@ export const TicketsTable: React.FC<TicketsTableProps> = ({ tickets, loading }) 
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  const canEditTicket = (ticket: TicketData): boolean => {
+    if (ticket.status === 'closed') return false; // Universal closed ticket lock
+    if (user?.role === 'admin' || user?.role === 'agent') return true;
+    if (user?.role === 'requester') {
+      return ticket.status === 'open' && ticket.requester?.id === user.id;
+    }
+    return false;
+  };
+
+  const canDeleteTicket = (): boolean => {
+    return user?.role === 'admin'; // Delete is strictly for Admin
+  };
+
+  const confirmDelete = () => {
+    if (ticketToDelete && onDeleteTicket) {
+      onDeleteTicket(ticketToDelete);
+      setTicketToDelete(null);
+    }
   };
 
   if (loading) {
@@ -138,56 +180,136 @@ export const TicketsTable: React.FC<TicketsTableProps> = ({ tickets, loading }) 
               <th className="px-4 py-3">Priority</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3 text-right">Submitted Date</th>
+              <th className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {tickets.map((ticket) => (
-              <tr key={ticket.id} className="hover:bg-slate-50/80 transition-colors">
-                <td className="px-4 py-3 font-mono font-bold text-slate-500">
-                  #{ticket.id}
-                </td>
-                <td className="px-4 py-3 max-w-md">
-                  <div className="font-bold text-slate-900 text-sm line-clamp-1">
-                    {ticket.title}
-                  </div>
-                  <div className="text-slate-500 line-clamp-1 text-xs mt-0.5">
-                    {ticket.description}
-                  </div>
-                </td>
-                <td className="px-4 py-3 whitespace-nowrap">
-                  {ticket.department ? (
-                    <Badge variant="outline" className="bg-slate-100 text-slate-700 border-slate-300 font-medium">
-                      <Building2 className="w-3 h-3 mr-1 text-slate-500 inline" />
-                      {ticket.department.name}
-                    </Badge>
-                  ) : (
-                    <span className="text-slate-400">—</span>
-                  )}
-                </td>
-                <td className="px-4 py-3 whitespace-nowrap">
-                  {ticket.requester ? (
-                    <div className="flex items-center gap-1.5 text-slate-700 font-medium">
-                      <UserIcon className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{ticket.requester.name}</span>
+            {tickets.map((ticket) => {
+              const showEdit = canEditTicket(ticket);
+              const showDelete = canDeleteTicket();
+
+              return (
+                <tr key={ticket.id} className="hover:bg-slate-50/80 transition-colors">
+                  <td className="px-4 py-3 font-mono font-bold text-slate-500">
+                    #{ticket.id}
+                  </td>
+                  <td className="px-4 py-3 max-w-md">
+                    <div className="font-bold text-slate-900 text-sm line-clamp-1">
+                      {ticket.title}
                     </div>
-                  ) : (
-                    <span className="text-slate-400">—</span>
-                  )}
-                </td>
-                <td className="px-4 py-3 whitespace-nowrap">
-                  {getPriorityBadge(ticket.priority)}
-                </td>
-                <td className="px-4 py-3 whitespace-nowrap">
-                  {getStatusBadge(ticket.status)}
-                </td>
-                <td className="px-4 py-3 text-right text-slate-500 whitespace-nowrap">
-                  {formatDate(ticket.created_at)}
-                </td>
-              </tr>
-            ))}
+                    <div className="text-slate-500 line-clamp-1 text-xs mt-0.5">
+                      {ticket.description}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    {ticket.department ? (
+                      <Badge variant="outline" className="bg-slate-100 text-slate-700 border-slate-300 font-medium">
+                        <Building2 className="w-3 h-3 mr-1 text-slate-500 inline" />
+                        {ticket.department.name}
+                      </Badge>
+                    ) : (
+                      <span className="text-slate-400">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    {ticket.requester ? (
+                      <div className="flex items-center gap-1.5 text-slate-700 font-medium">
+                        <UserIcon className="w-3.5 h-3.5 text-slate-400" />
+                        <span>{ticket.requester.name}</span>
+                      </div>
+                    ) : (
+                      <span className="text-slate-400">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    {getPriorityBadge(ticket.priority)}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    {getStatusBadge(ticket.status)}
+                  </td>
+                  <td className="px-4 py-3 text-right text-slate-500 whitespace-nowrap">
+                    {formatDate(ticket.created_at)}
+                  </td>
+                  <td className="px-4 py-3 text-right whitespace-nowrap">
+                    <div className="flex items-center justify-end gap-1">
+                      {showEdit && onEditTicket && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onEditTicket(ticket)}
+                          className="h-8 px-2 text-slate-600 hover:text-amber-700 hover:bg-amber-50"
+                          title="Edit Ticket"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
+                      {showDelete && onDeleteTicket && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setTicketToDelete(ticket)}
+                          className="h-8 px-2 text-slate-600 hover:text-red-700 hover:bg-red-50"
+                          title="Delete Ticket"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
+                      {!showEdit && !showDelete && (
+                        <span className="text-slate-400 text-xs px-2">—</span>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
+
+      {/* Delete Ticket Confirmation Dialog */}
+      {ticketToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div
+            className="w-full max-w-sm bg-white rounded-xl border border-slate-200 shadow-2xl p-6 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2 text-red-600 font-bold">
+                <Trash2 className="w-5 h-5" />
+                <span>Confirm Ticket Deletion</span>
+              </div>
+              <button
+                onClick={() => setTicketToDelete(null)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600">
+              Are you sure you want to permanently delete ticket <strong className="text-slate-900">#{ticketToDelete.id}</strong> ("{ticketToDelete.title}")? This action cannot be undone.
+            </p>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setTicketToDelete(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={confirmDelete}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                Delete Ticket
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

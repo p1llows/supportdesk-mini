@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CreateTicketModal } from '@/components/tickets/CreateTicketModal';
+import { EditTicketModal } from '@/components/tickets/EditTicketModal';
 import { TicketsTable, type TicketData } from '@/components/tickets/TicketsTable';
 import { TicketFilters, type DepartmentOption } from '@/components/tickets/TicketFilters';
 import { UsersTable, type UserData } from '@/components/users/UsersTable';
@@ -68,8 +69,11 @@ export const DashboardPage = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [ticketsLoading, setTicketsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Modal States
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState<boolean>(false);
+  const [editingTicket, setEditingTicket] = useState<TicketData | null>(null);
 
   // Filter States
   const [searchInput, setSearchInput] = useState<string>('');
@@ -243,6 +247,27 @@ export const DashboardPage = () => {
     setStatusFilter('');
     setPriorityFilter('');
     setDepartmentIdFilter('');
+  };
+
+  const handleDeleteTicket = async (ticket: TicketData) => {
+    if (!token) return;
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/v1/tickets/${ticket.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+        },
+      });
+
+      const result = await response.json();
+      if (response.ok && result.status === 'success') {
+        handleRefreshAll();
+      }
+    } catch {
+      // Handled gracefully
+    }
   };
 
   const getRoleBadgeVariant = (role: string) => {
@@ -472,7 +497,12 @@ export const DashboardPage = () => {
 
       {/* Tickets Table Component */}
       <section>
-        <TicketsTable tickets={tickets} loading={ticketsLoading} />
+        <TicketsTable
+          tickets={tickets}
+          loading={ticketsLoading}
+          onEditTicket={(t) => setEditingTicket(t)}
+          onDeleteTicket={handleDeleteTicket}
+        />
       </section>
 
       {/* Users Directory Table Component — Rendered for Admin and Support Agent users (Issue #9) */}
@@ -494,6 +524,15 @@ export const DashboardPage = () => {
         isOpen={isCreateUserModalOpen}
         onClose={() => setIsCreateUserModalOpen(false)}
         onSuccess={fetchUsers}
+      />
+
+      {/* Edit Ticket Modal (Issue #12) */}
+      <EditTicketModal
+        isOpen={!!editingTicket}
+        ticket={editingTicket}
+        departments={departments}
+        onClose={() => setEditingTicket(null)}
+        onSuccess={handleRefreshAll}
       />
     </main>
   );
