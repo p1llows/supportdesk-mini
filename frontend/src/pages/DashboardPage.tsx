@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CreateTicketModal } from '@/components/tickets/CreateTicketModal';
 import { TicketsTable, type TicketData } from '@/components/tickets/TicketsTable';
+import { TicketFilters, type DepartmentOption } from '@/components/tickets/TicketFilters';
 import {
   Ticket,
   Clock,
@@ -59,7 +60,48 @@ export const DashboardPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
+  // Filter States
+  const [searchInput, setSearchInput] = useState<string>('');
+  const [debouncedSearch, setDebouncedSearch] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [priorityFilter, setPriorityFilter] = useState<string>('');
+  const [departmentIdFilter, setDepartmentIdFilter] = useState<string>('');
+  const [departments, setDepartments] = useState<DepartmentOption[]>([]);
+
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+
+  // 400ms search input debouncing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  // Fetch departments list for filter dropdown options
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchDepartments = async () => {
+      try {
+        const response = await fetch(`${apiBaseUrl}/v1/departments`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
+          },
+        });
+
+        const result = await response.json();
+        if (response.ok && result.status === 'success') {
+          setDepartments(result.data.departments || []);
+        }
+      } catch {
+        // Handled gracefully
+      }
+    };
+
+    fetchDepartments();
+  }, [token, apiBaseUrl]);
 
   const fetchStats = useCallback(async (scopeOverride?: string) => {
     if (!token) return;
@@ -96,8 +138,16 @@ export const DashboardPage = () => {
     if (!token) return;
     setTicketsLoading(true);
 
+    const params = new URLSearchParams();
+    if (debouncedSearch) params.append('search', debouncedSearch);
+    if (statusFilter) params.append('status', statusFilter);
+    if (priorityFilter) params.append('priority', priorityFilter);
+    if (departmentIdFilter) params.append('department_id', departmentIdFilter);
+
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+
     try {
-      const response = await fetch(`${apiBaseUrl}/v1/tickets`, {
+      const response = await fetch(`${apiBaseUrl}/v1/tickets${queryString}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json',
@@ -114,7 +164,7 @@ export const DashboardPage = () => {
     } finally {
       setTicketsLoading(false);
     }
-  }, [apiBaseUrl, token]);
+  }, [apiBaseUrl, token, debouncedSearch, statusFilter, priorityFilter, departmentIdFilter]);
 
   const handleRefreshAll = () => {
     fetchStats();
@@ -123,12 +173,30 @@ export const DashboardPage = () => {
 
   useEffect(() => {
     fetchStats();
-    fetchTickets();
   }, []);
 
+  useEffect(() => {
+    fetchTickets();
+  }, [fetchTickets]);
+
   const handleScopeChange = (newScope: string) => {
+    // Reset filters when switching dashboard role tabs
+    setSearchInput('');
+    setDebouncedSearch('');
+    setStatusFilter('');
+    setPriorityFilter('');
+    setDepartmentIdFilter('');
+
     setActiveScope(newScope);
     fetchStats(newScope);
+  };
+
+  const handleClearFilters = () => {
+    setSearchInput('');
+    setDebouncedSearch('');
+    setStatusFilter('');
+    setPriorityFilter('');
+    setDepartmentIdFilter('');
   };
 
   const getRoleBadgeVariant = (role: string) => {
@@ -323,6 +391,22 @@ export const DashboardPage = () => {
             </CardDescription>
           </CardContent>
         </Card>
+      </section>
+
+      {/* Ticket Filters Component */}
+      <section>
+        <TicketFilters
+          search={searchInput}
+          status={statusFilter}
+          priority={priorityFilter}
+          departmentId={departmentIdFilter}
+          departments={departments}
+          onSearchChange={setSearchInput}
+          onStatusChange={setStatusFilter}
+          onPriorityChange={setPriorityFilter}
+          onDepartmentIdChange={setDepartmentIdFilter}
+          onClearFilters={handleClearFilters}
+        />
       </section>
 
       {/* Tickets Table Component */}
