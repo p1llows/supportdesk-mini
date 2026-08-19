@@ -25,8 +25,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/v1/auth/me', [AuthController::class, 'me']);
     Route::get('/v1/dashboard/stats', [DashboardController::class, 'stats']);
 
-    // User Routes (Issue #9)
+    // User Routes (Issue #9 & #11)
     Route::get('/v1/users', [UserController::class, 'index']);
+    Route::post('/v1/users', [UserController::class, 'store']);
 
     // Department Routes (Issue #7)
     Route::get('/v1/departments', [DepartmentController::class, 'index']);
