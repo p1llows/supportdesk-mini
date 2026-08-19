@@ -11,10 +11,17 @@ use Illuminate\Validation\Rule;
 class TicketController extends Controller
 {
     /**
-     * Display a listing of tickets scoped to the user's role.
+     * Display a listing of tickets scoped to the user's role and search/filter criteria.
      */
     public function index(Request $request): JsonResponse
     {
+        $validated = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'status' => ['nullable', 'string', Rule::in(['open', 'in_progress', 'resolved', 'closed'])],
+            'priority' => ['nullable', 'string', Rule::in(['low', 'medium', 'high'])],
+            'department_id' => ['nullable', 'integer', Rule::exists('departments', 'id')],
+        ]);
+
         $user = $request->user();
 
         $query = Ticket::with([
@@ -25,6 +32,30 @@ class TicketController extends Controller
         // Requesters can only view their own submitted tickets
         if ($user->role === 'requester') {
             $query->where('user_id', $user->id);
+        }
+
+        // Apply search keyword filter wrapped in closure grouping to preserve requester isolation
+        if (! empty($validated['search'])) {
+            $escapedSearch = addcslashes($validated['search'], '%_\\');
+            $query->where(function ($q) use ($escapedSearch) {
+                $q->where('title', 'like', "%{$escapedSearch}%")
+                  ->orWhere('description', 'like', "%{$escapedSearch}%");
+            });
+        }
+
+        // Apply status filter
+        if (! empty($validated['status'])) {
+            $query->where('status', $validated['status']);
+        }
+
+        // Apply priority filter
+        if (! empty($validated['priority'])) {
+            $query->where('priority', $validated['priority']);
+        }
+
+        // Apply department_id filter
+        if (! empty($validated['department_id'])) {
+            $query->where('department_id', $validated['department_id']);
         }
 
         $tickets = $query->get();
