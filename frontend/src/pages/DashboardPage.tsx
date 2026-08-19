@@ -7,6 +7,7 @@ import { CreateTicketModal } from '@/components/tickets/CreateTicketModal';
 import { TicketsTable, type TicketData } from '@/components/tickets/TicketsTable';
 import { TicketFilters, type DepartmentOption } from '@/components/tickets/TicketFilters';
 import { UsersTable, type UserData } from '@/components/users/UsersTable';
+import { CreateUserModal } from '@/components/users/CreateUserModal';
 import {
   Ticket,
   Clock,
@@ -18,6 +19,7 @@ import {
   PlusCircle,
   Filter,
   ShieldCheck,
+  UserPlus,
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -67,6 +69,7 @@ export const DashboardPage = () => {
   const [ticketsLoading, setTicketsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState<boolean>(false);
 
   // Filter States
   const [searchInput, setSearchInput] = useState<string>('');
@@ -76,7 +79,7 @@ export const DashboardPage = () => {
   const [departmentIdFilter, setDepartmentIdFilter] = useState<string>('');
   const [departments, setDepartments] = useState<DepartmentOption[]>([]);
 
-  // Users Directory State (Issue #9)
+  // Users Directory State (Issue #9 & #11)
   const [usersList, setUsersList] = useState<UserData[]>([]);
   const [usersLoading, setUsersLoading] = useState<boolean>(false);
 
@@ -300,17 +303,32 @@ export const DashboardPage = () => {
           </p>
         </div>
 
-        {/* Submit Ticket Action — Restricted strictly to Requesters */}
-        {user?.role === 'requester' && (
-          <Button
-            onClick={() => setIsModalOpen(true)}
-            variant="default"
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
-          >
-            <PlusCircle className="w-4 h-4 mr-2" />
-            Submit New Ticket
-          </Button>
-        )}
+        {/* Action Buttons Header */}
+        <div className="flex items-center gap-2">
+          {/* Submit Ticket Action — Restricted strictly to Requesters */}
+          {user?.role === 'requester' && (
+            <Button
+              onClick={() => setIsModalOpen(true)}
+              variant="default"
+              className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+            >
+              <PlusCircle className="w-4 h-4 mr-2" />
+              Submit New Ticket
+            </Button>
+          )}
+
+          {/* Add User Action — Restricted strictly to Administrators (Issue #11) */}
+          {user?.role === 'admin' && (
+            <Button
+              onClick={() => setIsCreateUserModalOpen(true)}
+              variant="default"
+              className="bg-purple-600 hover:bg-purple-700 text-white shadow-sm"
+            >
+              <UserPlus className="w-4 h-4 mr-2" />
+              Add System User
+            </Button>
+          )}
+        </div>
       </section>
 
       {/* Role Filter Controls */}
@@ -469,6 +487,13 @@ export const DashboardPage = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={handleRefreshAll}
+      />
+
+      {/* Create User Modal (Issue #11) */}
+      <CreateUserModal
+        isOpen={isCreateUserModalOpen}
+        onClose={() => setIsCreateUserModalOpen(false)}
+        onSuccess={fetchUsers}
       />
     </main>
   );
