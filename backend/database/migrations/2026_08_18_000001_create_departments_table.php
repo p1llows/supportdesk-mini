@@ -12,12 +12,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('departments', function (Blueprint $table) {
-            $table->id();
-            $table->string('name')->unique();
-            $table->text('description')->nullable();
-            $table->timestamps();
-        });
+        if (! Schema::hasTable('departments')) {
+            Schema::create('departments', function (Blueprint $table) {
+                $table->id();
+                $table->string('name')->unique();
+                $table->text('description')->nullable();
+                $table->timestamps();
+            });
+        }
 
         // Insert five approved departments directly in migration up()
         // ensuring departments exist before add_department_id_to_tickets_table migration runs

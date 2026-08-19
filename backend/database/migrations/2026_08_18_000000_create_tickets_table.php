@@ -11,16 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tickets', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('department')->nullable(); // Prepares schema for Issue #7 Department integration
-            $table->string('title');
-            $table->text('description');
-            $table->enum('priority', ['low', 'medium', 'high'])->default('medium');
-            $table->enum('status', ['open', 'in_progress', 'resolved', 'closed'])->default('open');
-            $table->timestamps();
-        });
+        if (! Schema::hasTable('tickets')) {
+            Schema::create('tickets', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+                $table->string('department')->nullable(); // Prepares schema for Issue #7 Department integration
+                $table->string('title');
+                $table->text('description');
+                $table->enum('priority', ['low', 'medium', 'high'])->default('medium');
+                $table->enum('status', ['open', 'in_progress', 'resolved', 'closed'])->default('open');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

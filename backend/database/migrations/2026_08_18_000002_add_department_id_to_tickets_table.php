@@ -12,10 +12,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 1. Add nullable department_id column
-        Schema::table('tickets', function (Blueprint $table) {
-            $table->unsignedBigInteger('department_id')->nullable()->after('user_id');
-        });
+        // 1. Add nullable department_id column if not already present
+        if (! Schema::hasColumn('tickets', 'department_id')) {
+            Schema::table('tickets', function (Blueprint $table) {
+                $table->unsignedBigInteger('department_id')->nullable()->after('user_id');
+            });
+        }
 
         // 2. Query departments table (inserted in 2026_08_18_000001_create_departments_table)
         $itDeptId = DB::table('departments')->where('name', 'Information Technology')->value('id') ?? 1;
@@ -42,10 +44,12 @@ return new class extends Migration
         // Assign any remaining NULL department records to Information Technology ID
         DB::table('tickets')->whereNull('department_id')->update(['department_id' => $itDeptId]);
 
-        // 3. Drop legacy department string column
-        Schema::table('tickets', function (Blueprint $table) {
-            $table->dropColumn('department');
-        });
+        // 3. Drop legacy department string column if present
+        if (Schema::hasColumn('tickets', 'department')) {
+            Schema::table('tickets', function (Blueprint $table) {
+                $table->dropColumn('department');
+            });
+        }
 
         // 4. Enforce non-nullable constraint and foreign key constraint to departments.id
         Schema::table('tickets', function (Blueprint $table) {
