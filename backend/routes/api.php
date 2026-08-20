@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\HealthController;
+use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\TicketController;
 use App\Http\Controllers\Api\TicketStatusController;
 use App\Http\Controllers\Api\UserController;
@@ -26,12 +27,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/v1/auth/me', [AuthController::class, 'me']);
     Route::get('/v1/dashboard/stats', [DashboardController::class, 'stats']);
 
+    // Profile Routes (Issue #14)
+    Route::patch('/v1/profile/department', [ProfileController::class, 'updateDepartment']);
+
     // User Routes (Issue #9 & #11)
     Route::get('/v1/users', [UserController::class, 'index']);
     Route::post('/v1/users', [UserController::class, 'store']);
 
-    // Department Routes (Issue #7)
+    // Department Routes (Issue #7 & #14)
     Route::get('/v1/departments', [DepartmentController::class, 'index']);
+    Route::post('/v1/departments', [DepartmentController::class, 'store']);
+    Route::put('/v1/departments/{department}', [DepartmentController::class, 'update']);
+    Route::delete('/v1/departments/{department}', [DepartmentController::class, 'destroy']);
 
     // Ticket Routes (Issue #6 / #7 / #12)
     Route::post('/v1/tickets', [TicketController::class, 'store']);
