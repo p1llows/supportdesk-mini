@@ -12,6 +12,11 @@ import {
   Edit3,
   Trash2,
   X,
+  PlayCircle,
+  CheckCheck,
+  Lock,
+  RotateCcw,
+  RefreshCw,
 } from 'lucide-react';
 
 export interface TicketData {
@@ -38,6 +43,7 @@ interface TicketsTableProps {
   loading: boolean;
   onEditTicket?: (ticket: TicketData) => void;
   onDeleteTicket?: (ticket: TicketData) => void;
+  onStatusChange?: (ticket: TicketData, newStatus: TicketData['status']) => void;
 }
 
 export const TicketsTable: React.FC<TicketsTableProps> = ({
@@ -45,9 +51,11 @@ export const TicketsTable: React.FC<TicketsTableProps> = ({
   loading,
   onEditTicket,
   onDeleteTicket,
+  onStatusChange,
 }) => {
   const { user } = useAuth();
   const [ticketToDelete, setTicketToDelete] = useState<TicketData | null>(null);
+  const [statusUpdating, setStatusUpdating] = useState<number | null>(null);
 
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
@@ -116,6 +124,46 @@ export const TicketsTable: React.FC<TicketsTableProps> = ({
 
   const canDeleteTicket = (): boolean => {
     return user?.role === 'admin'; // Delete is strictly for Admin
+  };
+
+  /**
+   * Returns the single next allowed status for this ticket given the current user's role,
+   * or null if no transition is available to this user.
+   *
+   * Follows the plan's permission matrix exactly:
+   *   Agent/Admin : open → in_progress, in_progress → resolved
+   *   Admin only  : resolved → closed, closed → open
+   */
+  const getNextStatus = (ticket: TicketData): TicketData['status'] | null => {
+    const role = user?.role;
+    if (role === 'requester' || !role) return null;
+    if (ticket.status === 'open')        return 'in_progress';
+    if (ticket.status === 'in_progress') return 'resolved';
+    if (ticket.status === 'resolved' && role === 'admin') return 'closed';
+    if (ticket.status === 'closed'   && role === 'admin') return 'open';
+    return null;
+  };
+
+  const getStatusActionLabel = (nextStatus: TicketData['status']): { label: string; icon: React.ReactNode; className: string } => {
+    switch (nextStatus) {
+      case 'in_progress':
+        return { label: 'Start', icon: <PlayCircle className="w-3.5 h-3.5" />, className: 'text-purple-700 hover:bg-purple-50 hover:text-purple-800' };
+      case 'resolved':
+        return { label: 'Resolve', icon: <CheckCheck className="w-3.5 h-3.5" />, className: 'text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800' };
+      case 'closed':
+        return { label: 'Close', icon: <Lock className="w-3.5 h-3.5" />, className: 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' };
+      case 'open':
+        return { label: 'Reopen', icon: <RotateCcw className="w-3.5 h-3.5" />, className: 'text-blue-700 hover:bg-blue-50 hover:text-blue-800' };
+      default:
+        return { label: nextStatus, icon: null, className: '' };
+    }
+  };
+
+  const handleStatusButtonClick = async (ticket: TicketData, nextStatus: TicketData['status']) => {
+    if (!onStatusChange || statusUpdating !== null) return;
+    setStatusUpdating(ticket.id);
+    await onStatusChange(ticket, nextStatus);
+    setStatusUpdating(null);
   };
 
   const confirmDelete = () => {
@@ -232,6 +280,31 @@ export const TicketsTable: React.FC<TicketsTableProps> = ({
                   </td>
                   <td className="px-4 py-3 text-right whitespace-nowrap">
                     <div className="flex items-center justify-end gap-1">
+                      {/* Status transition button (Agent/Admin only) */}
+                      {(() => {
+                        const nextStatus = getNextStatus(ticket);
+                        if (!nextStatus || !onStatusChange) return null;
+                        const { label, icon, className: btnClass } = getStatusActionLabel(nextStatus);
+                        const isUpdating = statusUpdating === ticket.id;
+                        return (
+                          <Button
+                            id={`status-btn-${ticket.id}`}
+                            variant="ghost"
+                            size="sm"
+                            disabled={isUpdating}
+                            onClick={() => handleStatusButtonClick(ticket, nextStatus)}
+                            className={`h-8 px-2 gap-1 text-xs font-medium ${btnClass}`}
+                            title={`Change status to ${nextStatus.replace('_', ' ')}`}
+                          >
+                            {isUpdating ? (
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              icon
+                            )}
+                            {label}
+                          </Button>
+                        );
+                      })()}
                       {showEdit && onEditTicket && (
                         <Button
                           variant="ghost"
@@ -254,7 +327,7 @@ export const TicketsTable: React.FC<TicketsTableProps> = ({
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       )}
-                      {!showEdit && !showDelete && (
+                      {getNextStatus(ticket) === null && !showEdit && !showDelete && (
                         <span className="text-slate-400 text-xs px-2">—</span>
                       )}
                     </div>

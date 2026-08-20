@@ -270,6 +270,37 @@ export const DashboardPage = () => {
     }
   };
 
+  const handleStatusChange = async (ticket: TicketData, newStatus: TicketData['status']) => {
+    if (!token) return;
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/v1/tickets/${ticket.id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      const result = await response.json();
+      if (response.ok && result.status === 'success') {
+        // Optimistically update the ticket in local state so the button changes immediately,
+        // then do a background refresh to keep stats in sync.
+        setTickets((prev) =>
+          prev.map((t) =>
+            t.id === ticket.id ? { ...t, status: newStatus } : t
+          )
+        );
+        // Refresh stats & full queue to keep dashboard counts accurate.
+        handleRefreshAll();
+      }
+    } catch {
+      // Handled gracefully
+    }
+  };
+
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
       case 'admin':
@@ -502,6 +533,7 @@ export const DashboardPage = () => {
           loading={ticketsLoading}
           onEditTicket={(t) => setEditingTicket(t)}
           onDeleteTicket={handleDeleteTicket}
+          onStatusChange={handleStatusChange}
         />
       </section>
 
