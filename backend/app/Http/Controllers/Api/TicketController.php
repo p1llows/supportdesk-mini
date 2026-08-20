@@ -34,6 +34,11 @@ class TicketController extends Controller
             $query->where('user_id', $user->id);
         }
 
+        // Agents can only view tickets in their department
+        if ($user->role === 'agent') {
+            $query->where('department_id', $user->department_id);
+        }
+
         // Apply search keyword filter wrapped in closure grouping to preserve requester isolation
         if (! empty($validated['search'])) {
             $escapedSearch = addcslashes($validated['search'], '%_\\');
@@ -99,6 +104,13 @@ class TicketController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'Only requesters are authorized to submit new tickets',
+            ], 403);
+        }
+
+        if (!$user->department_id) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'a department must be selected first',
             ], 403);
         }
 

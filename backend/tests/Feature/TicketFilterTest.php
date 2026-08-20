@@ -465,10 +465,10 @@ class TicketFilterTest extends TestCase
 
     public function test_agent_can_filter_system_queue(): void
     {
-        $agent = User::factory()->create(['role' => 'agent']);
+        $deptId = $this->getDepartmentId();
+        $agent = User::factory()->create(['role' => 'agent', 'department_id' => $deptId]);
         $requester1 = User::factory()->create(['role' => 'requester']);
         $requester2 = User::factory()->create(['role' => 'requester']);
-        $deptId = $this->getDepartmentId();
 
         Ticket::create([
             'user_id' => $requester1->id,
