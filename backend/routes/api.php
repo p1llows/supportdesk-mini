@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\TicketController;
+use App\Http\Controllers\Api\TicketStatusController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -37,4 +38,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/v1/tickets', [TicketController::class, 'index']);
     Route::put('/v1/tickets/{ticket}', [TicketController::class, 'update']);
     Route::delete('/v1/tickets/{ticket}', [TicketController::class, 'destroy']);
+
+    // Ticket Status Workflow (Issue #13)
+    Route::patch('/v1/tickets/{ticket}/status', [TicketStatusController::class, 'update']);
 });
