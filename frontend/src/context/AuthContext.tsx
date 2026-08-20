@@ -4,7 +4,8 @@ export interface User {
   id: number;
   name: string;
   email: string;
-  role: 'admin' | 'agent' | 'requester' | string;
+  role: 'admin' | 'agent' | 'requester';
+  department_id?: number | null;
 }
 
 interface AuthContextType {
@@ -15,6 +16,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (name: string, email: string, password: string, password_confirmation: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
+  checkSession: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -163,6 +165,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('auth_user');
   };
 
+  const checkSession = async (): Promise<void> => {
+    if (token) {
+      await fetchCurrentUser(token);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -173,6 +181,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         register,
         logout,
+        checkSession,
       }}
     >
       {children}

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,6 +24,8 @@ export const CreateUserModal = ({ isOpen, onClose, onSuccess }: CreateUserModalP
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<'admin' | 'agent' | 'requester'>('agent');
+  const [departmentId, setDepartmentId] = useState<string>('');
+  const [departments, setDepartments] = useState<{ id: number; name: string }[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +34,27 @@ export const CreateUserModal = ({ isOpen, onClose, onSuccess }: CreateUserModalP
 
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
+  useEffect(() => {
+    if (!isOpen || !token) return;
+    const fetchDepartments = async () => {
+      try {
+        const response = await fetch(`${apiBaseUrl}/v1/departments`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
+          },
+        });
+        const result = await response.json();
+        if (response.ok && result.status === 'success') {
+          setDepartments(result.data.departments || []);
+        }
+      } catch {
+        // gracefully handle
+      }
+    };
+    fetchDepartments();
+  }, [isOpen, token, apiBaseUrl]);
+
   if (!isOpen) return null;
 
   const resetForm = () => {
@@ -39,6 +62,7 @@ export const CreateUserModal = ({ isOpen, onClose, onSuccess }: CreateUserModalP
     setEmail('');
     setPassword('');
     setRole('agent');
+    setDepartmentId('');
     setError(null);
     setFieldErrors({});
     setSuccessMessage(null);
@@ -59,6 +83,22 @@ export const CreateUserModal = ({ isOpen, onClose, onSuccess }: CreateUserModalP
     setSuccessMessage(null);
 
     try {
+      const payload: any = {
+        name: name.trim(),
+        email: email.trim(),
+        password,
+        role,
+      };
+
+      if (role === 'agent') {
+        if (!departmentId) {
+          setError('Department is required for support agents.');
+          setLoading(false);
+          return;
+        }
+        payload.department_id = parseInt(departmentId, 10);
+      }
+
       const response = await fetch(`${apiBaseUrl}/v1/users`, {
         method: 'POST',
         headers: {
@@ -66,12 +106,7 @@ export const CreateUserModal = ({ isOpen, onClose, onSuccess }: CreateUserModalP
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: JSON.stringify({
-          name: name.trim(),
-          email: email.trim(),
-          password,
-          role,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json();
@@ -238,6 +273,28 @@ export const CreateUserModal = ({ isOpen, onClose, onSuccess }: CreateUserModalP
               <p className="text-xs text-red-600 font-medium">{fieldErrors.role[0]}</p>
             )}
           </div>
+
+          {/* Department Select (Only for Agents) */}
+          {role === 'agent' && (
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-700">Assigned Department</label>
+              <select
+                className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:opacity-50"
+                value={departmentId}
+                onChange={(e) => setDepartmentId(e.target.value)}
+                disabled={loading}
+                required
+              >
+                <option value="">Select a department...</option>
+                {departments.map((dept) => (
+                  <option key={dept.id} value={dept.id}>{dept.name}</option>
+                ))}
+              </select>
+              {fieldErrors.department_id && (
+                <p className="text-xs text-red-600 font-medium">{fieldErrors.department_id[0]}</p>
+              )}
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">

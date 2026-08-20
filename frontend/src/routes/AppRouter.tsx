@@ -3,6 +3,8 @@ import { useAuth } from '@/context/AuthContext';
 import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
 import { DashboardPage } from '@/pages/DashboardPage';
+import { ProfilePage } from '@/pages/ProfilePage';
+import { DepartmentsPage } from '@/pages/DepartmentsPage';
 
 // Guest Guard: Allows unauthenticated access, redirects authenticated users to /
 const GuestRoute = ({ children }: { children: React.ReactNode }) => {
@@ -77,6 +79,22 @@ export const AppRouter = () => {
           element={
             <ProtectedRoute>
               <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/departments"
+          element={
+            <ProtectedRoute>
+              <DepartmentsPage />
             </ProtectedRoute>
           }
         />

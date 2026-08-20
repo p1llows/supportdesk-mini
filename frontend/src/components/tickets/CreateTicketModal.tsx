@@ -22,7 +22,7 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
   onClose,
   onSuccess,
 }) => {
-  const { token } = useAuth();
+  const { user, token } = useAuth();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
@@ -142,8 +142,25 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
           </button>
         </div>
 
-        {/* Modal Body / Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        {/* Profile Missing Department Block */}
+        {user?.role === 'requester' && !user?.department_id ? (
+          <div className="p-8 text-center space-y-4">
+            <div className="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8" />
+            </div>
+            <h4 className="text-lg font-bold text-slate-900">Profile Incomplete</h4>
+            <p className="text-sm text-slate-500 font-medium">
+              A department must be selected first.
+            </p>
+            <div className="pt-4 border-t border-slate-100 mt-6">
+              <Button onClick={onClose} variant="outline" className="w-full">
+                Close
+              </Button>
+            </div>
+          </div>
+        ) : (
+          /* Modal Body / Form */
+          <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
             <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
               <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
@@ -265,6 +282,7 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
             </Button>
           </div>
         </form>
+        )}
       </div>
     </div>
   );

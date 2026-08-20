@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +22,8 @@ import {
   Filter,
   ShieldCheck,
   UserPlus,
+  Settings,
+  Building2,
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -63,6 +66,7 @@ interface UsersApiResponse {
 
 export const DashboardPage = () => {
   const { user, token, logout } = useAuth();
+  const navigate = useNavigate();
   const [data, setData] = useState<DashboardApiResponse['data'] | null>(null);
   const [tickets, setTickets] = useState<TicketData[]>([]);
   const [activeScope, setActiveScope] = useState<string>('');
@@ -333,6 +337,28 @@ export const DashboardPage = () => {
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+          {user?.role === 'requester' && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/profile')}
+              className="text-slate-700 hover:text-slate-900"
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Profile
+            </Button>
+          )}
+          {user?.role === 'admin' && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/departments')}
+              className="text-slate-700 hover:text-slate-900"
+            >
+              <Building2 className="w-4 h-4 mr-2" />
+              Departments
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
@@ -363,14 +389,27 @@ export const DashboardPage = () => {
         <div className="flex items-center gap-2">
           {/* Submit Ticket Action — Restricted strictly to Requesters */}
           {user?.role === 'requester' && (
-            <Button
-              onClick={() => setIsModalOpen(true)}
-              variant="default"
-              className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
-            >
-              <PlusCircle className="w-4 h-4 mr-2" />
-              Submit New Ticket
-            </Button>
+            <div className="flex items-center gap-2">
+              {!user.department_id && (
+                <span className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded border border-amber-200">
+                  Update profile to submit tickets
+                </span>
+              )}
+              <Button
+                onClick={() => {
+                  if (!user.department_id) {
+                    navigate('/profile');
+                  } else {
+                    setIsModalOpen(true);
+                  }
+                }}
+                variant="default"
+                className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+              >
+                <PlusCircle className="w-4 h-4 mr-2" />
+                Submit New Ticket
+              </Button>
+            </div>
           )}
 
           {/* Add User Action — Restricted strictly to Administrators (Issue #11) */}
