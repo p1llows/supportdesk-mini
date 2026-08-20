@@ -32,8 +32,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState<boolean>(true);
 
   // Verify stored token on initial load
-  const fetchCurrentUser = useCallback(async (authToken: string) => {
-    setLoading(true);
+  const fetchCurrentUser = useCallback(async (authToken: string, isInitialLoad: boolean = true) => {
+    if (isInitialLoad) setLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/v1/auth/me`, {
         headers: {
@@ -57,7 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {
       // Network error; clear loading state
     } finally {
-      setLoading(false);
+      if (isInitialLoad) setLoading(false);
     }
   }, []);
 
@@ -167,7 +167,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkSession = async (): Promise<void> => {
     if (token) {
-      await fetchCurrentUser(token);
+      await fetchCurrentUser(token, false);
     }
   };
 
