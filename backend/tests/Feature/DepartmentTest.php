@@ -52,12 +52,12 @@ class DepartmentTest extends TestCase
         $this->assertContains('Facilities', $departmentNames);
     }
 
-    public function test_requester_can_create_ticket_with_valid_department_id(): void
+    public function test_requester_can_create_ticket_with_valid_department(): void
     {
         $this->seed(\Database\Seeders\DepartmentSeeder::class);
 
-        $requester = User::factory()->create(['role' => 'requester']);
         $department = Department::where('name', 'Information Technology')->firstOrFail();
+        $requester = User::factory()->create(['role' => 'requester', 'department_id' => $department->id]);
 
         $response = $this->actingAs($requester, 'sanctum')
             ->postJson('/api/v1/tickets', [
@@ -92,7 +92,8 @@ class DepartmentTest extends TestCase
 
     public function test_ticket_creation_fails_when_department_id_is_missing(): void
     {
-        $requester = User::factory()->create(['role' => 'requester']);
+        $department = Department::create(['name' => 'IT']);
+        $requester = User::factory()->create(['role' => 'requester', 'department_id' => $department->id]);
 
         $response = $this->actingAs($requester, 'sanctum')
             ->postJson('/api/v1/tickets', [
@@ -107,7 +108,8 @@ class DepartmentTest extends TestCase
 
     public function test_ticket_creation_fails_when_department_id_does_not_exist(): void
     {
-        $requester = User::factory()->create(['role' => 'requester']);
+        $department = Department::create(['name' => 'IT']);
+        $requester = User::factory()->create(['role' => 'requester', 'department_id' => $department->id]);
 
         $response = $this->actingAs($requester, 'sanctum')
             ->postJson('/api/v1/tickets', [
@@ -125,8 +127,8 @@ class DepartmentTest extends TestCase
     {
         $this->seed(\Database\Seeders\DepartmentSeeder::class);
 
-        $requester = User::factory()->create(['role' => 'requester']);
         $department = Department::where('name', 'Human Resources')->firstOrFail();
+        $requester = User::factory()->create(['role' => 'requester', 'department_id' => $department->id]);
 
         $response = $this->actingAs($requester, 'sanctum')
             ->postJson('/api/v1/tickets', [
