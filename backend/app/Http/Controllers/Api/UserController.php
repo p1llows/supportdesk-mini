@@ -87,6 +87,11 @@ class UserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8'],
             'role' => ['required', 'string', Rule::in(['admin', 'agent', 'requester'])],
+            'department_id' => [
+                'required_if:role,agent',
+                'prohibited_unless:role,agent',
+                'exists:departments,id'
+            ],
         ]);
 
         $newUser = User::create([
@@ -94,6 +99,7 @@ class UserController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
+            'department_id' => $validated['department_id'] ?? null,
         ]);
 
         return response()->json([
@@ -105,6 +111,7 @@ class UserController extends Controller
                     'name' => $newUser->name,
                     'email' => $newUser->email,
                     'role' => $newUser->role,
+                    'department_id' => $newUser->department_id,
                     'created_at' => $newUser->created_at?->toISOString(),
                     'updated_at' => $newUser->updated_at?->toISOString(),
                 ],

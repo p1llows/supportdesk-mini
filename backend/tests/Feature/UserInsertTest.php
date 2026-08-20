@@ -63,6 +63,7 @@ class UserInsertTest extends TestCase
 
     public function test_admin_can_create_user_with_valid_data(): void
     {
+        $dept = \App\Models\Department::create(['name' => 'IT']);
         $admin = User::factory()->create(['role' => 'admin']);
 
         $response = $this->actingAs($admin, 'sanctum')
@@ -71,6 +72,7 @@ class UserInsertTest extends TestCase
                 'email' => 'jane.agent@supportdesk.local',
                 'password' => 'securepass123',
                 'role' => 'agent',
+                'department_id' => $dept->id,
             ]);
 
         $response->assertStatus(201)
@@ -139,6 +141,7 @@ class UserInsertTest extends TestCase
 
     public function test_created_user_password_is_hashed(): void
     {
+        $dept = \App\Models\Department::create(['name' => 'IT']);
         $admin = User::factory()->create(['role' => 'admin']);
         $plaintextPassword = 'mysecretpassword123';
 
@@ -148,6 +151,7 @@ class UserInsertTest extends TestCase
                 'email' => 'hashed@supportdesk.local',
                 'password' => $plaintextPassword,
                 'role' => 'agent',
+                'department_id' => $dept->id,
             ]);
 
         $response->assertStatus(201);
@@ -178,6 +182,7 @@ class UserInsertTest extends TestCase
 
     public function test_created_user_appears_in_subsequent_user_listing(): void
     {
+        $dept = \App\Models\Department::create(['name' => 'IT']);
         $admin = User::factory()->create(['role' => 'admin']);
 
         $createResponse = $this->actingAs($admin, 'sanctum')
@@ -186,6 +191,7 @@ class UserInsertTest extends TestCase
                 'email' => 'listed@supportdesk.local',
                 'password' => 'password123',
                 'role' => 'agent',
+                'department_id' => $dept->id,
             ]);
 
         $createResponse->assertStatus(201);
