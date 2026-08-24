@@ -6,6 +6,7 @@ export interface User {
   email: string;
   role: 'admin' | 'agent' | 'requester';
   department_id?: number | null;
+  created_at?: string;
 }
 
 interface AuthContextType {

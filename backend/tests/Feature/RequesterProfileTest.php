@@ -34,6 +34,46 @@ class RequesterProfileTest extends TestCase
         $this->assertEquals($department->id, $requester->fresh()->department_id);
     }
 
+    public function test_me_endpoint_reflects_department_assignment(): void
+    {
+        // Regression: the dashboard gates ticket submission on user.department_id,
+        // but /auth/me did not return it — so a successful assignment never
+        // unlocked the UI.
+        $requester = User::factory()->create(['role' => 'requester', 'department_id' => null]);
+        $department = Department::create(['name' => 'IT Department']);
+
+        $this->actingAs($requester, 'sanctum')
+            ->patchJson('/api/v1/profile/department', [
+                'department_id' => $department->id,
+            ])
+            ->assertStatus(200);
+
+        $response = $this->actingAs($requester, 'sanctum')
+            ->getJson('/api/v1/auth/me');
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.user.department_id', $department->id);
+    }
+
+    public function test_login_response_includes_department_id(): void
+    {
+        $department = Department::create(['name' => 'Login Dept Check']);
+        $user = User::factory()->create([
+            'email' => 'deptcheck@supportdesk.local',
+            'password' => bcrypt('password123'),
+            'role' => 'agent',
+            'department_id' => $department->id,
+        ]);
+
+        $response = $this->postJson('/api/v1/auth/login', [
+            'email' => 'deptcheck@supportdesk.local',
+            'password' => 'password123',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.user.department_id', $department->id);
+    }
+
     public function test_requester_cannot_update_to_non_existent_department(): void
     {
         $requester = User::factory()->create(['role' => 'requester', 'department_id' => null]);

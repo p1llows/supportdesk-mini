@@ -2,14 +2,20 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Concerns\ChecksTicketAccess;
 use App\Http\Controllers\Controller;
 use App\Models\Ticket;
+use App\Models\TicketActivity;
+use App\Models\TicketAttachment;
+use App\Services\TicketNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class TicketController extends Controller
 {
+    use ChecksTicketAccess;
+
     /**
      * Display a listing of tickets scoped to the user's role and search/filter criteria.
      */
@@ -93,6 +99,47 @@ class TicketController extends Controller
     }
 
     /**
+     * Display the specified ticket (Day 5 — ticket detail view).
+     */
+    public function show(Request $request, Ticket $ticket): JsonResponse
+    {
+        // 1. Authorization — role-scoped ticket access
+        if ($response = $this->authorizeTicketAccess($request, $ticket)) {
+            return $response;
+        }
+
+        // 2. Load & return
+        $ticket->load(['department:id,name', 'user:id,name,email', 'attachments']);
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => [
+                'ticket' => [
+                    'id'          => $ticket->id,
+                    'title'       => $ticket->title,
+                    'description' => $ticket->description,
+                    'priority'    => $ticket->priority,
+                    'status'      => $ticket->status,
+                    'department'  => $ticket->department ? [
+                        'id'   => $ticket->department->id,
+                        'name' => $ticket->department->name,
+                    ] : null,
+                    'requester' => $ticket->user ? [
+                        'id'    => $ticket->user->id,
+                        'name'  => $ticket->user->name,
+                        'email' => $ticket->user->email,
+                    ] : null,
+                    'attachments' => $ticket->attachments->map(
+                        fn (TicketAttachment $attachment) => $this->formatAttachment($attachment)
+                    )->values()->all(),
+                    'created_at' => $ticket->created_at?->toISOString(),
+                    'updated_at' => $ticket->updated_at?->toISOString(),
+                ],
+            ],
+        ]);
+    }
+
+    /**
      * Store a newly created ticket in storage (Requesters only).
      */
     public function store(Request $request): JsonResponse
@@ -119,6 +166,12 @@ class TicketController extends Controller
             'description' => ['required', 'string'],
             'priority' => ['required', 'string', Rule::in(['low', 'medium', 'high'])],
             'department_id' => ['required', 'integer', Rule::exists('departments', 'id')],
+            'attachments' => ['sometimes', 'array', 'max:3'],
+            'attachments.*' => [
+                'file',
+                'max:5120', // kilobytes = 5 MB per file
+                'mimes:jpg,jpeg,png,gif,webp,pdf,txt,csv,doc,docx,xls,xlsx,zip',
+            ],
         ]);
 
         $ticket = Ticket::create([
@@ -130,7 +183,33 @@ class TicketController extends Controller
             'status' => 'open', // Force default status to open
         ]);
 
-        $ticket->load('department:id,name');
+        // Store any uploaded attachments on the private local disk.
+        foreach ($request->file('attachments', []) as $file) {
+            $ticket->attachments()->create([
+                'user_id' => $user->id,
+                'original_name' => $file->getClientOriginalName(),
+                'stored_path' => $file->store("attachments/{$ticket->id}", 'local'),
+                'mime_type' => $file->getClientMimeType(),
+                'size_bytes' => $file->getSize(),
+            ]);
+        }
+
+        $ticket->load(['department:id,name', 'attachments']);
+
+        // Log the timeline's starting event (Day 5)
+        TicketActivity::create([
+            'ticket_id' => $ticket->id,
+            'user_id'   => $user->id,
+            'type'      => 'created',
+        ]);
+
+        // Notify department agents and administrators of the new ticket
+        TicketNotificationService::notifyRelatedUsers(
+            $ticket,
+            'ticket_created',
+            "New ticket \"{$ticket->title}\" submitted in {$ticket->department?->name}",
+            $user->id
+        );
 
         return response()->json([
             'status' => 'success',
@@ -148,11 +227,28 @@ class TicketController extends Controller
                         'id' => $ticket->department->id,
                         'name' => $ticket->department->name,
                     ] : null,
+                    'attachments' => $ticket->attachments->map(
+                        fn (TicketAttachment $attachment) => $this->formatAttachment($attachment)
+                    )->values()->all(),
                     'created_at' => $ticket->created_at?->toISOString(),
                     'updated_at' => $ticket->updated_at?->toISOString(),
                 ],
             ],
         ], 201);
+    }
+
+    /**
+     * Format an attachment for API responses (metadata only — never the path).
+     */
+    private function formatAttachment(TicketAttachment $attachment): array
+    {
+        return [
+            'id' => $attachment->id,
+            'original_name' => $attachment->original_name,
+            'mime_type' => $attachment->mime_type,
+            'size_bytes' => $attachment->size_bytes,
+            'created_at' => $attachment->created_at?->toISOString(),
+        ];
     }
 
     /**
@@ -189,8 +285,56 @@ class TicketController extends Controller
             'department_id' => ['sometimes', 'required', 'integer', Rule::exists('departments', 'id')],
         ]);
 
+        // Capture old values BEFORE the update is applied (Day 5 activity logging)
+        $oldPriority       = $ticket->priority;
+        $oldDepartmentId   = $ticket->department_id;
+        $oldDepartmentName = $ticket->department?->name;
+
+        // Apply the update
         $ticket->update($validated);
+
+        // Reload relationship in case department_id changed
         $ticket->load(['department:id,name', 'user:id,name,email']);
+
+        // Log priority change ONLY if the value actually changed
+        if (array_key_exists('priority', $validated) && $oldPriority !== $ticket->priority) {
+            TicketActivity::create([
+                'ticket_id' => $ticket->id,
+                'user_id'   => $user->id,
+                'type'      => 'priority_change',
+                'metadata'  => [
+                    'old' => $oldPriority,
+                    'new' => $ticket->priority,
+                ],
+            ]);
+
+            TicketNotificationService::notifyRelatedUsers(
+                $ticket,
+                'priority_change',
+                "Priority of \"{$ticket->title}\" changed from {$oldPriority} to {$ticket->priority}",
+                $user->id
+            );
+        }
+
+        // Log department change ONLY if the value actually changed
+        if (array_key_exists('department_id', $validated) && $oldDepartmentId !== $ticket->department_id) {
+            TicketActivity::create([
+                'ticket_id' => $ticket->id,
+                'user_id'   => $user->id,
+                'type'      => 'department_change',
+                'metadata'  => [
+                    'old' => $oldDepartmentName,
+                    'new' => $ticket->department?->name,
+                ],
+            ]);
+
+            TicketNotificationService::notifyRelatedUsers(
+                $ticket,
+                'department_change',
+                "Ticket \"{$ticket->title}\" moved to {$ticket->department?->name}",
+                $user->id
+            );
+        }
 
         return response()->json([
             'status' => 'success',

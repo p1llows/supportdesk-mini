@@ -142,7 +142,7 @@ export const CreateUserModal = ({ isOpen, onClose, onSuccess }: CreateUserModalP
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
+            <div className="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
               <UserPlus className="w-5 h-5" />
             </div>
             <div>
@@ -235,11 +235,11 @@ export const CreateUserModal = ({ isOpen, onClose, onSuccess }: CreateUserModalP
                 onClick={() => setRole('agent')}
                 className={`p-2.5 rounded-lg border text-left flex flex-col items-center justify-center gap-1 transition-all ${
                   role === 'agent'
-                    ? 'border-blue-600 bg-blue-50 text-blue-800 font-semibold'
+                    ? 'border-cyan-700 bg-cyan-50 text-cyan-800 font-semibold'
                     : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                 }`}
               >
-                <ShieldCheck className="w-4 h-4 text-blue-600" />
+                <ShieldCheck className="w-4 h-4 text-cyan-700" />
                 <span className="text-xs">Support Agent</span>
               </button>
 
@@ -261,11 +261,11 @@ export const CreateUserModal = ({ isOpen, onClose, onSuccess }: CreateUserModalP
                 onClick={() => setRole('admin')}
                 className={`p-2.5 rounded-lg border text-left flex flex-col items-center justify-center gap-1 transition-all ${
                   role === 'admin'
-                    ? 'border-purple-600 bg-purple-50 text-purple-800 font-semibold'
+                    ? 'border-violet-700 bg-violet-50 text-violet-800 font-semibold'
                     : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                 }`}
               >
-                <ShieldAlert className="w-4 h-4 text-purple-600" />
+                <ShieldAlert className="w-4 h-4 text-violet-700" />
                 <span className="text-xs">Administrator</span>
               </button>
             </div>
@@ -279,7 +279,7 @@ export const CreateUserModal = ({ isOpen, onClose, onSuccess }: CreateUserModalP
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-700">Assigned Department</label>
               <select
-                className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:opacity-50"
+                className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 disabled:opacity-50"
                 value={departmentId}
                 onChange={(e) => setDepartmentId(e.target.value)}
                 disabled={loading}
@@ -305,7 +305,7 @@ export const CreateUserModal = ({ isOpen, onClose, onSuccess }: CreateUserModalP
               type="submit"
               size="sm"
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-indigo-700 hover:bg-indigo-800 text-white"
             >
               {loading ? 'Creating User...' : 'Create User'}
             </Button>

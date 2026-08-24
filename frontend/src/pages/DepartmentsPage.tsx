@@ -1,8 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Pencil, Trash2, ArrowLeft, Loader2, AlertCircle, Building2 } from 'lucide-react';
+import { PlusCircle, Pencil, Loader2, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { DepartmentModal } from '@/components/departments/DepartmentModal';
 
@@ -11,10 +10,41 @@ interface DepartmentData {
   name: string;
 }
 
+interface AgentData {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  department_id: number | null;
+}
+
+// Avatar initials
+function Avatar({ name, color }: { name: string; color: string }) {
+  const initials = name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+  return (
+    <div
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+      style={{ backgroundColor: color }}
+    >
+      {initials}
+    </div>
+  );
+}
+
+function nameColor(name: string): string {
+  const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6', '#06b6d4', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+}
+
 export const DepartmentsPage = () => {
   const { user, token } = useAuth();
   const navigate = useNavigate();
   const [departments, setDepartments] = useState<DepartmentData[]>([]);
+  const [agents, setAgents] = useState<AgentData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,23 +54,34 @@ export const DepartmentsPage = () => {
 
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
-  const fetchDepartments = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${apiBaseUrl}/v1/departments`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json',
-        },
-      });
+      const [deptRes, usersRes] = await Promise.all([
+        fetch(`${apiBaseUrl}/v1/departments`, {
+          headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
+        }),
+        fetch(`${apiBaseUrl}/v1/users`, {
+          headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
+        }),
+      ]);
 
-      const result = await response.json();
-      if (response.ok && result.status === 'success') {
-        setDepartments(result.data.departments || []);
+      const deptResult = await deptRes.json();
+      const usersResult = await usersRes.json();
+
+      if (deptRes.ok && deptResult.status === 'success') {
+        setDepartments(deptResult.data.departments || []);
       } else {
-        setError(result.message || 'Failed to load departments');
+        setError(deptResult.message || 'Failed to load departments');
+      }
+
+      if (usersRes.ok && usersResult.status === 'success') {
+        // Only keep agents for department cards
+        setAgents(
+          (usersResult.data.users || []).filter((u: AgentData) => u.role === 'agent')
+        );
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Network error loading departments');
@@ -55,36 +96,17 @@ export const DepartmentsPage = () => {
       navigate('/', { replace: true });
       return;
     }
-    fetchDepartments();
-  }, [user, navigate, fetchDepartments]);
+    fetchData();
+  }, [user, navigate, fetchData]);
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this department? This cannot be undone.')) return;
-
-    try {
-      const response = await fetch(`${apiBaseUrl}/v1/departments/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json',
-        },
-      });
-
-      const result = await response.json();
-      if (response.ok && result.status === 'success') {
-        fetchDepartments();
-      } else {
-        alert(result.message || 'Failed to delete department. It may have existing tickets.');
-      }
-    } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'Failed to connect to backend server');
-    }
+  const getAgentsForDepartment = (deptId: number) => {
+    return agents.filter((a) => a.department_id === deptId);
   };
 
   if (loading && departments.length === 0) {
     return (
-      <main className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="flex items-center gap-3 text-slate-500">
+      <main className="min-h-[60vh] flex items-center justify-center">
+        <div className="flex items-center gap-3 text-slate-400">
           <Loader2 className="w-5 h-5 animate-spin" />
           Loading departments...
         </div>
@@ -93,112 +115,94 @@ export const DepartmentsPage = () => {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/')}
-            className="text-slate-600 hover:text-slate-900 -ml-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
-          </Button>
-
-          <Button
-            onClick={() => {
-              setEditingDepartment(null);
-              setIsModalOpen(true);
-            }}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            <PlusCircle className="w-4 h-4 mr-2" />
-            Add Department
-          </Button>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">Departments</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            {departments.length} departments · Administrator view
+          </p>
         </div>
+        <Button
+          onClick={() => {
+            setEditingDepartment(null);
+            setIsModalOpen(true);
+          }}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white"
+        >
+          <PlusCircle className="w-4 h-4 mr-2" />
+          Add Department
+        </Button>
+      </div>
 
-        <Card className="shadow-sm border-slate-200">
-          <CardHeader>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-700">
-                <Building2 className="w-6 h-6" />
+      {/* Error Alert */}
+      {error && (
+        <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 flex items-start gap-3 text-sm">
+          <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+          {error}
+        </div>
+      )}
+
+      {/* Department Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {departments.map((dept) => {
+          const deptAgents = getAgentsForDepartment(dept.id);
+          return (
+            <div
+              key={dept.id}
+              className="rounded-lg border border-slate-200 bg-white p-5 flex flex-col"
+            >
+              {/* Card header */}
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">{dept.name}</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {deptAgents.length} agent{deptAgents.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setEditingDepartment(dept);
+                    setIsModalOpen(true);
+                  }}
+                  className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                  title="Edit department"
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
               </div>
-              <div>
-                <CardTitle className="text-xl text-slate-900">Department Management</CardTitle>
-                <CardDescription className="mt-1">
-                  Manage support departments and their initial agents
-                </CardDescription>
+
+              {/* Agents list */}
+              <div className="space-y-3 flex-1">
+                {deptAgents.length === 0 ? (
+                  <p className="text-xs text-slate-500 italic">No agents assigned</p>
+                ) : (
+                  deptAgents.map((agent) => (
+                    <div key={agent.id} className="flex items-center gap-3">
+                      <Avatar name={agent.name} color={nameColor(agent.name)} />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-slate-800 truncate">{agent.name}</p>
+                        <p className="text-xs text-slate-500 truncate">{agent.email}</p>
+                      </div>
+                      <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full whitespace-nowrap">
+                        Active
+                      </span>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            {error && (
-              <div className="p-4 mb-4 rounded-lg bg-red-50 border border-red-200 text-red-700 flex items-start gap-3 text-sm">
-                <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
-                {error}
-              </div>
-            )}
-
-            <div className="rounded-md border border-slate-200 overflow-hidden bg-white">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-slate-50 border-b border-slate-200 text-slate-600">
-                  <tr>
-                    <th className="px-4 py-3 font-semibold">ID</th>
-                    <th className="px-4 py-3 font-semibold w-full">Department Name</th>
-                    <th className="px-4 py-3 font-semibold text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {departments.length === 0 ? (
-                    <tr>
-                      <td colSpan={3} className="px-4 py-8 text-center text-slate-500">
-                        No departments found.
-                      </td>
-                    </tr>
-                  ) : (
-                    departments.map((dept) => (
-                      <tr key={dept.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="px-4 py-3 text-slate-500">#{dept.id}</td>
-                        <td className="px-4 py-3 font-medium text-slate-900">{dept.name}</td>
-                        <td className="px-4 py-3 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 px-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50"
-                              onClick={() => {
-                                setEditingDepartment(dept);
-                                setIsModalOpen(true);
-                              }}
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 px-2 text-slate-600 hover:text-red-600 hover:bg-red-50"
-                              onClick={() => handleDelete(dept.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+          );
+        })}
       </div>
 
       <DepartmentModal
         isOpen={isModalOpen}
         department={editingDepartment}
         onClose={() => setIsModalOpen(false)}
-        onSuccess={fetchDepartments}
+        onSuccess={fetchData}
       />
-    </main>
+    </div>
   );
 };

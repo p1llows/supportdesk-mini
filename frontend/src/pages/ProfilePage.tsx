@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ShieldCheck, ArrowLeft, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Input } from '@/components/ui/input';
+import { SupportBadge } from '@/components/ui/status-badges';
+import { Loader2, AlertCircle, CheckCircle2, KeyRound, UserRound, Building2 } from 'lucide-react';
 
 interface DepartmentOption {
   id: number;
@@ -12,68 +13,133 @@ interface DepartmentOption {
 
 export const ProfilePage = () => {
   const { user, token, checkSession } = useAuth();
-  const navigate = useNavigate();
+
+  // Account details form state
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [savingDetails, setSavingDetails] = useState(false);
+  const [detailsError, setDetailsError] = useState<string | null>(null);
+  const [detailsSuccess, setDetailsSuccess] = useState<string | null>(null);
+
+  // Department state (requester self-service)
   const [departments, setDepartments] = useState<DepartmentOption[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<string>('');
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [savingDepartment, setSavingDepartment] = useState(false);
+  const [departmentError, setDepartmentError] = useState<string | null>(null);
+  const [departmentSuccess, setDepartmentSuccess] = useState<string | null>(null);
+  const [departmentsLoading, setDepartmentsLoading] = useState(true);
+
+  // Password change state
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
 
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
-  useEffect(() => {
-    // Only requesters should need to use this profile page for department assignment
-    if (user && user.role !== 'requester') {
-      navigate('/', { replace: true });
-      return;
-    }
+  const authHeaders = (): HeadersInit => ({
+    Authorization: `Bearer ${token}`,
+    Accept: 'application/json',
+  });
 
-    if (user?.department_id) {
-      setSelectedDepartment(user.department_id.toString());
+  // Seed the details form from the session user
+  useEffect(() => {
+    if (user) {
+      setName(user.name);
+      setEmail(user.email);
+      if (user.department_id) {
+        setSelectedDepartment(user.department_id.toString());
+      }
     }
+  }, [user]);
+
+  // Fetch departments for the requester selector + read-only display
+  useEffect(() => {
+    if (!token) return;
 
     const fetchDepartments = async () => {
       try {
         const response = await fetch(`${apiBaseUrl}/v1/departments`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json',
-          },
+          headers: authHeaders(),
         });
 
         const result = await response.json();
         if (response.ok && result.status === 'success') {
           setDepartments(result.data.departments || []);
         } else {
-          setError(result.message || 'Failed to load departments');
+          setDepartmentError(result.message || 'Failed to load departments');
         }
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : 'Failed to connect to backend server');
+        setDepartmentError(err instanceof Error ? err.message : 'Failed to connect to backend server');
       } finally {
-        setLoading(false);
+        setDepartmentsLoading(false);
       }
     };
 
     fetchDepartments();
-  }, [user, token, apiBaseUrl, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, apiBaseUrl]);
 
-  const handleSave = async () => {
-    if (!selectedDepartment) {
-      setError('Please select a department');
+  const extractError = (result: { message?: string; errors?: Record<string, string[]> }, fallback: string): string => {
+    if (result.errors) {
+      const firstError = Object.values(result.errors)[0];
+      if (firstError?.[0]) return firstError[0];
+    }
+    return result.message || fallback;
+  };
+
+  const handleSaveDetails = async () => {
+    if (!name.trim() || !email.trim()) {
+      setDetailsError('Name and email are required.');
       return;
     }
 
-    setSaving(true);
-    setError(null);
-    setSuccessMessage(null);
+    setSavingDetails(true);
+    setDetailsError(null);
+    setDetailsSuccess(null);
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/v1/profile`, {
+        method: 'PATCH',
+        headers: {
+          ...authHeaders(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: name.trim(), email: email.trim() }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.status === 'success') {
+        setDetailsSuccess('Account details updated successfully.');
+        await checkSession();
+      } else {
+        setDetailsError(extractError(result, 'Failed to update profile'));
+      }
+    } catch (err: unknown) {
+      setDetailsError(err instanceof Error ? err.message : 'Network error');
+    } finally {
+      setSavingDetails(false);
+    }
+  };
+
+  const handleSaveDepartment = async () => {
+    if (!selectedDepartment) {
+      setDepartmentError('Please select a department');
+      return;
+    }
+
+    setSavingDepartment(true);
+    setDepartmentError(null);
+    setDepartmentSuccess(null);
 
     try {
       const response = await fetch(`${apiBaseUrl}/v1/profile/department`, {
         method: 'PATCH',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json',
+          ...authHeaders(),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ department_id: parseInt(selectedDepartment, 10) }),
@@ -82,116 +148,347 @@ export const ProfilePage = () => {
       const result = await response.json();
 
       if (response.ok && result.status === 'success') {
-        setSuccessMessage('Profile updated successfully.');
-        // Refresh the user session so useAuth() has the updated department_id
+        setDepartmentSuccess('Department updated successfully.');
         await checkSession();
       } else {
-        if (response.status === 422 && result.errors) {
-          const firstError = Object.values(result.errors)[0] as string[];
-          setError(firstError[0] || 'Validation failed');
-        } else {
-          setError(result.message || 'Failed to update profile');
-        }
+        setDepartmentError(extractError(result, 'Failed to update department'));
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Network error');
+      setDepartmentError(err instanceof Error ? err.message : 'Network error');
     } finally {
-      setSaving(false);
+      setSavingDepartment(false);
     }
   };
 
-  if (loading) {
-    return (
-      <main className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="flex items-center gap-3 text-slate-500">
-          <Loader2 className="w-5 h-5 animate-spin" />
-          Loading profile...
-        </div>
-      </main>
-    );
-  }
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordError('All password fields are required.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New password and confirmation do not match.');
+      return;
+    }
+
+    setSavingPassword(true);
+    setPasswordError(null);
+    setPasswordSuccess(null);
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/v1/profile/password`, {
+        method: 'PATCH',
+        headers: {
+          ...authHeaders(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          current_password: currentPassword,
+          password: newPassword,
+          password_confirmation: confirmPassword,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.status === 'success') {
+        setPasswordSuccess('Password updated successfully.');
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      } else {
+        setPasswordError(extractError(result, 'Failed to update password'));
+      }
+    } catch (err: unknown) {
+      setPasswordError(err instanceof Error ? err.message : 'Network error');
+    } finally {
+      setSavingPassword(false);
+    }
+  };
+
+  const initials = user?.name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase() ?? '';
+
+  const memberSince = user?.created_at
+    ? new Date(user.created_at).toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : null;
+
+  const currentDepartmentName = departments.find(
+    (dept) => dept.id === user?.department_id
+  )?.name;
+
+  const detailsDirty = name.trim() !== user?.name || email.trim() !== user?.email;
 
   return (
-    <main className="min-h-screen bg-slate-50 p-4 md:p-8">
-      <div className="max-w-2xl mx-auto space-y-6">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate('/')}
-          className="text-slate-600 hover:text-slate-900 -ml-4"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
-        </Button>
-
-        <Card className="shadow-sm border-slate-200">
-          <CardHeader>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-700 font-bold text-lg">
-                {user?.name?.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <CardTitle className="text-xl text-slate-900">{user?.name}</CardTitle>
-                <CardDescription className="flex items-center gap-2 mt-1">
-                  {user?.email}
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                    <ShieldCheck className="w-3 h-3 mr-1" />
-                    {user?.role}
-                  </span>
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {error && (
-              <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 flex items-start gap-3 text-sm">
-                <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
-                {error}
-              </div>
-            )}
-            
-            {successMessage && (
-              <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-start gap-3 text-sm">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                {successMessage}
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <label htmlFor="department" className="text-sm font-medium text-slate-700">
-                Department Assignment
-              </label>
-              <p className="text-sm text-slate-500 mb-3">
-                You must select your department before you can submit any support tickets.
-              </p>
-              
-              <select
-                id="department"
-                value={selectedDepartment}
-                onChange={(e) => setSelectedDepartment(e.target.value)}
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:bg-slate-50"
-                disabled={saving}
-              >
-                <option value="">-- Select your department --</option>
-                {departments.map(dept => (
-                  <option key={dept.id} value={dept.id.toString()}>
-                    {dept.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </CardContent>
-          <CardFooter className="bg-slate-50 border-t border-slate-200 flex justify-end p-4">
-            <Button
-              onClick={handleSave}
-              disabled={saving || !selectedDepartment || selectedDepartment === user?.department_id?.toString()}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Save Profile
-            </Button>
-          </CardFooter>
-        </Card>
+    <div className="mx-auto max-w-3xl space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">Profile</h1>
+        <p className="mt-1 text-sm text-slate-500">Manage your account settings and preferences.</p>
       </div>
-    </main>
+
+      {/* Profile Summary Card */}
+      <Card className="shadow-sm border-slate-200">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-lg font-bold text-white">
+              {initials}
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-lg font-bold text-slate-900">{user?.name}</h2>
+                <SupportBadge category="role" value={user?.role ?? 'requester'} />
+              </div>
+              <p className="mt-0.5 truncate text-sm text-slate-500">{user?.email}</p>
+              {memberSince && (
+                <p className="mt-0.5 text-xs text-slate-400">Member since {memberSince}</p>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Account Details Card */}
+      <Card className="shadow-sm border-slate-200">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <UserRound className="h-4 w-4 text-slate-500" />
+            <CardTitle className="text-base text-slate-900">Account Details</CardTitle>
+          </div>
+          <CardDescription>Update your name and email address.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {detailsError && (
+            <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+              {detailsError}
+            </div>
+          )}
+
+          {detailsSuccess && (
+            <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              {detailsSuccess}
+            </div>
+          )}
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label htmlFor="profile-name" className="text-xs font-semibold text-slate-600">
+                Full Name
+              </label>
+              <Input
+                id="profile-name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                disabled={savingDetails}
+                className="bg-white border-slate-300 text-slate-800"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="profile-email" className="text-xs font-semibold text-slate-600">
+                Email Address
+              </label>
+              <Input
+                id="profile-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={savingDetails}
+                className="bg-white border-slate-300 text-slate-800"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-1">
+            <Button
+              onClick={handleSaveDetails}
+              disabled={savingDetails || !detailsDirty}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white"
+            >
+              {savingDetails && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Save Details
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Department Card */}
+      <Card className="shadow-sm border-slate-200">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Building2 className="h-4 w-4 text-slate-500" />
+            <CardTitle className="text-base text-slate-900">Department</CardTitle>
+          </div>
+          {user?.role === 'requester' ? (
+            <CardDescription>
+              Select the department your support requests belong to. Required before submitting tickets.
+            </CardDescription>
+          ) : (
+            <CardDescription>Assigned by administrators.</CardDescription>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {departmentsLoading ? (
+            <div className="flex items-center gap-2 text-sm text-slate-500">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading departments...
+            </div>
+          ) : user?.role === 'requester' ? (
+            <>
+              {departmentError && (
+                <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                  {departmentError}
+                </div>
+              )}
+
+              {departmentSuccess && (
+                <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  {departmentSuccess}
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label htmlFor="profile-department" className="text-xs font-semibold text-slate-600">
+                  Department Assignment
+                </label>
+                <select
+                  id="profile-department"
+                  value={selectedDepartment}
+                  onChange={(e) => setSelectedDepartment(e.target.value)}
+                  disabled={savingDepartment}
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent disabled:opacity-50 disabled:bg-slate-50"
+                >
+                  <option value="">-- Select your department --</option>
+                  {departments.map((dept) => (
+                    <option key={dept.id} value={dept.id.toString()}>
+                      {dept.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex justify-end pt-1">
+                <Button
+                  onClick={handleSaveDepartment}
+                  disabled={
+                    savingDepartment ||
+                    !selectedDepartment ||
+                    selectedDepartment === user?.department_id?.toString()
+                  }
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                >
+                  {savingDepartment && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Save Department
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm">
+              <span className="text-slate-500">Current department: </span>
+              <span className="font-semibold text-slate-800">
+                {currentDepartmentName ?? '—'}
+              </span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Change Password Card */}
+      <Card className="shadow-sm border-slate-200">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <KeyRound className="h-4 w-4 text-slate-500" />
+            <CardTitle className="text-base text-slate-900">Change Password</CardTitle>
+          </div>
+          <CardDescription>
+            Choose a strong password of at least 8 characters.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {passwordError && (
+            <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+              {passwordError}
+            </div>
+          )}
+
+          {passwordSuccess && (
+            <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              {passwordSuccess}
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <label htmlFor="current-password" className="text-xs font-semibold text-slate-600">
+              Current Password
+            </label>
+            <Input
+              id="current-password"
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              disabled={savingPassword}
+              autoComplete="current-password"
+              className="bg-white border-slate-300 text-slate-800"
+            />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label htmlFor="new-password" className="text-xs font-semibold text-slate-600">
+                New Password
+              </label>
+              <Input
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                disabled={savingPassword}
+                autoComplete="new-password"
+                className="bg-white border-slate-300 text-slate-800"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="confirm-password" className="text-xs font-semibold text-slate-600">
+                Confirm New Password
+              </label>
+              <Input
+                id="confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={savingPassword}
+                autoComplete="new-password"
+                className="bg-white border-slate-300 text-slate-800"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-1">
+            <Button
+              onClick={handleChangePassword}
+              disabled={savingPassword || !currentPassword || !newPassword || !confirmPassword}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white"
+            >
+              {savingPassword && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Update Password
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };

@@ -3,7 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AlertCircle, Loader2, PlusCircle, X } from 'lucide-react';
+import { AlertCircle, Loader2, PlusCircle, X, Paperclip, Trash2 } from 'lucide-react';
 
 interface DepartmentOption {
   id: number;
@@ -32,6 +32,8 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
   const [departmentFetchError, setDepartmentFetchError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [attachmentErrors, setAttachmentErrors] = useState<string[]>([]);
 
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
@@ -81,23 +83,55 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
       return;
     }
 
+    // Validate attachments client-side
+    const attachmentErrs: string[] = [];
+    if (attachments.length > 3) {
+      attachmentErrs.push('Maximum 3 files allowed');
+    }
+    for (const file of attachments) {
+      if (file.size > 5 * 1024 * 1024) {
+        attachmentErrs.push(`${file.name}: exceeds 5 MB limit`);
+      }
+      const allowedTypes = [
+        'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+        'application/pdf',
+        'text/plain', 'text/csv',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/zip',
+      ];
+      if (!allowedTypes.includes(file.type)) {
+        attachmentErrs.push(`${file.name}: unsupported file type`);
+      }
+    }
+    if (attachmentErrs.length > 0) {
+      setAttachmentErrors(attachmentErrs);
+      return;
+    }
+    setAttachmentErrors([]);
+
     setLoading(true);
     setError(null);
 
     try {
+      const formData = new FormData();
+      formData.append('title', title);
+      formData.append('description', description);
+      formData.append('priority', priority);
+      formData.append('department_id', departmentId);
+      attachments.forEach((file) => {
+        formData.append('attachments[]', file);
+      });
+
       const response = await fetch(`${apiBaseUrl}/v1/tickets`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json',
         },
-        body: JSON.stringify({
-          title,
-          description,
-          priority,
-          department_id: Number(departmentId),
-        }),
+        body: formData,
       });
 
       const result = await response.json();
@@ -107,6 +141,7 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
         setTitle('');
         setDescription('');
         setPriority('medium');
+        setAttachments([]);
         onSuccess();
         onClose();
       } else {
@@ -125,7 +160,7 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+            <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-700">
               <PlusCircle className="w-4 h-4" />
             </div>
             <div>
@@ -208,7 +243,7 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
               value={departmentId}
               onChange={(e) => setDepartmentId(e.target.value)}
               disabled={loading || fetchingDepartments}
-              className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <option value="" disabled>Select target department...</option>
               {departments.map((dept) => (
@@ -229,7 +264,7 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
               value={priority}
               onChange={(e) => setPriority(e.target.value as 'low' | 'medium' | 'high')}
               disabled={loading}
-              className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <option value="low">Low Priority</option>
               <option value="medium">Medium Priority</option>
@@ -250,8 +285,62 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               disabled={loading}
-              className="w-full rounded-md border border-slate-200 bg-white p-3 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-md border border-slate-200 bg-white p-3 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
             />
+          </div>
+
+          {/* File Attachments */}
+          <div className="space-y-1.5">
+            <Label htmlFor="ticket-attachments" className="text-xs font-semibold text-slate-700">
+              Attachments (max 3 files, 5 MB each)
+            </Label>
+            <input
+              id="ticket-attachments"
+              type="file"
+              multiple
+              accept="image/jpeg,image/png,image/gif,image/webp,application/pdf,text/plain,text/csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/zip"
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                const combined = [...attachments, ...files].slice(0, 3);
+                setAttachments(combined);
+                setAttachmentErrors([]);
+                // Reset input value to allow re-selecting same file
+                (e.target as HTMLInputElement).value = '';
+              }}
+              disabled={loading}
+              className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+            />
+            {attachments.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-1">
+                {attachments.map((file, idx) => (
+                  <span
+                    key={`${file.name}-${idx}`}
+                    className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-slate-100 text-xs text-slate-700"
+                  >
+                    <Paperclip className="w-3.5 h-3.5 text-slate-400" />
+                    <span className="truncate max-w-[200px]">{file.name}</span>
+                    <span className="text-slate-400">
+                      {(file.size / 1024).toFixed(1)} KB
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setAttachments(attachments.filter((_, i) => i !== idx))}
+                      className="text-slate-400 hover:text-red-500"
+                      aria-label="Remove file"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+            {attachmentErrors.length > 0 && (
+              <div className="p-2 rounded bg-red-50 border border-red-200 text-red-700 text-xs space-y-1">
+                {attachmentErrors.map((err, i) => (
+                  <div key={i}>{err}</div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Modal Footer */}
@@ -269,7 +358,7 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
               type="submit"
               size="sm"
               disabled={loading || fetchingDepartments || !departmentId}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-indigo-700 hover:bg-indigo-800 text-white"
             >
               {loading ? (
                 <>

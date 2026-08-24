@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Ticket;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -31,7 +32,8 @@ class UserController extends Controller
             'search' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $query = User::select(['id', 'name', 'email', 'role', 'created_at', 'updated_at'])
+        $query = User::with('department:id,name')
+            ->select(['id', 'name', 'email', 'role', 'department_id', 'created_at', 'updated_at'])
             ->orderBy('created_at', 'desc');
 
         // Apply optional role filter
@@ -59,6 +61,11 @@ class UserController extends Controller
                         'name' => $u->name,
                         'email' => $u->email,
                         'role' => $u->role,
+                        'department_id' => $u->department_id,
+                        'department' => $u->department ? [
+                            'id' => $u->department->id,
+                            'name' => $u->department->name,
+                        ] : null,
                         'created_at' => $u->created_at?->toISOString(),
                         'updated_at' => $u->updated_at?->toISOString(),
                     ];
@@ -117,5 +124,96 @@ class UserController extends Controller
                 ],
             ],
         ], 201);
+    }
+
+    /**
+     * Update an existing user (Administrators only).
+     */
+    public function update(Request $request, User $user): JsonResponse
+    {
+        $authUser = $request->user();
+
+        if ($authUser->role !== 'admin') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Only administrators are authorized to update users',
+            ], 403);
+        }
+
+        // Prevent admin from deleting/demoting themselves
+        if ($authUser->id === $user->id && $request->has('role') && $request->input('role') !== 'admin') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You cannot change your own role',
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'name' => ['sometimes', 'required', 'string', 'max:255'],
+            'email' => ['sometimes', 'required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'role' => ['sometimes', 'required', 'string', Rule::in(['admin', 'agent', 'requester'])],
+            'department_id' => ['nullable', 'integer', 'exists:departments,id'],
+        ]);
+
+        $user->update($validated);
+        $user->load('department:id,name');
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'User updated successfully',
+            'data' => [
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'department_id' => $user->department_id,
+                    'department' => $user->department ? [
+                        'id' => $user->department->id,
+                        'name' => $user->department->name,
+                    ] : null,
+                    'created_at' => $user->created_at?->toISOString(),
+                    'updated_at' => $user->updated_at?->toISOString(),
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * Remove the specified user (Administrators only).
+     */
+    public function destroy(Request $request, User $user): JsonResponse
+    {
+        $authUser = $request->user();
+
+        if ($authUser->role !== 'admin') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Only administrators are authorized to delete users',
+            ], 403);
+        }
+
+        // Prevent admin from deleting themselves
+        if ($authUser->id === $user->id) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You cannot delete your own account',
+            ], 422);
+        }
+
+        // Check if user has any tickets
+        if (Ticket::where('user_id', $user->id)->exists()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Cannot delete user with existing tickets. Reassign or delete their tickets first.',
+            ], 409);
+        }
+
+        $user->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'User deleted successfully',
+        ]);
     }
 }

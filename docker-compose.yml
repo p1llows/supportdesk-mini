@@ -3,6 +3,8 @@ services:
     image: mysql:8.0
     container_name: supportdesk_mysql
     restart: unless-stopped
+    ports:
+      - "3306:3306"
     environment:
       MYSQL_DATABASE: ${DB_DATABASE:-supportdesk_mini}
       MYSQL_USER: ${DB_USERNAME:-supportdesk}

@@ -1,6 +1,6 @@
 import React from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Users as UsersIcon, ShieldCheck, User as UserIcon, ShieldAlert } from 'lucide-react';
+import { SupportBadge } from '@/components/ui/status-badges';
+import { Users as UsersIcon } from 'lucide-react';
 
 export interface UserData {
   id: number;
@@ -17,32 +17,6 @@ interface UsersTableProps {
 }
 
 export const UsersTable: React.FC<UsersTableProps> = ({ users, loading }) => {
-  const getRoleBadge = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return (
-          <Badge variant="destructive" className="bg-purple-600 hover:bg-purple-700">
-            <ShieldAlert className="w-3 h-3 mr-1 inline" />
-            Administrator
-          </Badge>
-        );
-      case 'agent':
-        return (
-          <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 font-medium">
-            <ShieldCheck className="w-3 h-3 mr-1 inline text-blue-600" />
-            Support Agent
-          </Badge>
-        );
-      default:
-        return (
-          <Badge variant="outline" className="bg-slate-100 text-slate-700 border-slate-300 font-medium">
-            <UserIcon className="w-3 h-3 mr-1 inline text-slate-500" />
-            Requester
-          </Badge>
-        );
-    }
-  };
-
   const formatDate = (dateString: string) => {
     if (!dateString) return '—';
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -83,11 +57,11 @@ export const UsersTable: React.FC<UsersTableProps> = ({ users, loading }) => {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
       <div className="p-4 md:p-5 border-b border-slate-100 flex items-center justify-between">
         <div>
           <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
-            <UsersIcon className="w-4 h-4 text-purple-600" />
+            <UsersIcon className="w-4 h-4 text-indigo-700" />
             System User Directory
           </h3>
           <p className="text-xs text-slate-500">
@@ -120,7 +94,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({ users, loading }) => {
                   {u.email}
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
-                  {getRoleBadge(u.role)}
+                  <SupportBadge category="role" value={u.role} />
                 </td>
                 <td className="px-4 py-3 text-right text-slate-500 whitespace-nowrap">
                   {formatDate(u.created_at)}

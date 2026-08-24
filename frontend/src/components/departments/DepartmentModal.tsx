@@ -127,7 +127,7 @@ export const DepartmentModal = ({ isOpen, department, onClose, onSuccess }: Depa
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
+            <div className="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
@@ -259,7 +259,7 @@ export const DepartmentModal = ({ isOpen, department, onClose, onSuccess }: Depa
               type="submit"
               size="sm"
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-indigo-700 hover:bg-indigo-800 text-white"
             >
               {loading ? 'Saving...' : (isEditing ? 'Update Department' : 'Create Department & Agent')}
             </Button>

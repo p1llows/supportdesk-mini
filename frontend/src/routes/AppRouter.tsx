@@ -5,6 +5,9 @@ import { RegisterPage } from '@/pages/RegisterPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { DepartmentsPage } from '@/pages/DepartmentsPage';
+import { TicketDetailPage } from '@/pages/TicketDetailPage';
+import { AuthenticatedLayout } from '@/components/layout/AuthenticatedLayout';
+import { UsersPage } from '@/pages/UsersPage';
 
 // Guest Guard: Allows unauthenticated access, redirects authenticated users to /
 const GuestRoute = ({ children }: { children: React.ReactNode }) => {
@@ -26,7 +29,7 @@ const GuestRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 p-6 flex flex-col items-center justify-center">
+    <main className="min-h-screen bg-slate-50">
       {children}
     </main>
   );
@@ -74,30 +77,13 @@ export const AppRouter = () => {
             </GuestRoute>
           }
         />
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <DashboardPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/departments"
-          element={
-            <ProtectedRoute>
-              <DepartmentsPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route element={<ProtectedRoute><AuthenticatedLayout /></ProtectedRoute>}>
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/departments" element={<DepartmentsPage />} />
+          <Route path="/users" element={<UsersPage />} />
+          <Route path="/tickets/:id" element={<TicketDetailPage />} />
+        </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

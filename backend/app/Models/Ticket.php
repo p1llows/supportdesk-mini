@@ -5,10 +5,25 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Ticket extends Model
 {
     use HasFactory;
+
+    /**
+     * When a ticket is deleted, delete its attachments through Eloquent so
+     * each child's `deleting` hook removes the stored file from disk. The
+     * database FK cascade alone would only remove rows and orphan the files.
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function (Ticket $ticket) {
+            $ticket->attachments()->each(
+                fn (TicketAttachment $attachment) => $attachment->delete()
+            );
+        });
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -42,5 +57,25 @@ class Ticket extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the unified activity timeline entries for this ticket.
+     *
+     * @return HasMany<TicketActivity, $this>
+     */
+    public function activities(): HasMany
+    {
+        return $this->hasMany(TicketActivity::class);
+    }
+
+    /**
+     * Get the file attachments uploaded with this ticket.
+     *
+     * @return HasMany<TicketAttachment, $this>
+     */
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(TicketAttachment::class);
     }
 }

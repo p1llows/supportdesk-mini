@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -54,5 +55,15 @@ class User extends Authenticatable
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
+    }
+
+    /**
+     * Get the activity entries authored by this user.
+     *
+     * @return HasMany<TicketActivity, $this>
+     */
+    public function activities(): HasMany
+    {
+        return $this->hasMany(TicketActivity::class);
     }
 }

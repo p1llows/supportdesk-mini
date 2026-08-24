@@ -40,6 +40,7 @@ class AuthController extends Controller
                     'name' => $user->name,
                     'email' => $user->email,
                     'role' => $user->role,
+                    'department_id' => $user->department_id,
                 ],
             ],
         ], 201);
@@ -78,6 +79,7 @@ class AuthController extends Controller
                     'name' => $user->name,
                     'email' => $user->email,
                     'role' => $user->role,
+                    'department_id' => $user->department_id,
                 ],
             ],
         ]);
@@ -111,6 +113,8 @@ class AuthController extends Controller
                     'name' => $user->name,
                     'email' => $user->email,
                     'role' => $user->role,
+                    'department_id' => $user->department_id,
+                    'created_at' => $user->created_at?->toISOString(),
                 ],
             ],
         ]);

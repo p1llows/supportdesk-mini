@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Lock, LogIn, AlertCircle, UserPlus } from 'lucide-react';
+import { PasswordInput } from '@/components/auth/PasswordInput';
+import { AlertCircle, ArrowRight, Loader2 } from 'lucide-react';
 
 export const LoginForm: React.FC = () => {
   const { login } = useAuth();
@@ -37,80 +37,70 @@ export const LoginForm: React.FC = () => {
   };
 
   return (
-    <Card className="w-full max-w-md shadow-sm border-slate-200">
-      <CardHeader className="space-y-1 text-center">
-        <div className="mx-auto w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mb-2">
-          <Lock className="w-5 h-5 text-slate-700" />
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {error && (
+        <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
+          <span>{error}</span>
         </div>
-        <CardTitle className="text-2xl font-bold tracking-tight text-slate-900">
-          Sign In
-        </CardTitle>
-        <CardDescription className="text-sm text-slate-500">
-          Enter your credentials to access SupportDesk Mini
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="p-3 rounded-md bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
+      )}
 
-          <div className="space-y-1.5">
-            <Label htmlFor="email">Email Address</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="user@supportdesk.local"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
-              required
-              autoComplete="email"
-            />
-          </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="email">Email address</Label>
+        <Input
+          id="email"
+          type="email"
+          placeholder="you@company.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={loading}
+          required
+          autoFocus
+          autoComplete="email"
+          className="h-10 bg-white border-slate-300 text-slate-800 placeholder:text-slate-400"
+        />
+      </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
-              required
-              autoComplete="current-password"
-            />
-          </div>
-
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? (
-              <span className="flex items-center gap-2">
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Signing in...
-              </span>
-            ) : (
-              <span className="flex items-center justify-center gap-2">
-                <LogIn className="w-4 h-4" />
-                Sign In
-              </span>
-            )}
-          </Button>
-        </form>
-
-        <div className="mt-6 border-t border-slate-100 pt-4 text-center text-xs text-slate-500">
-          Don't have an account?{' '}
-          <Link
-            to="/register"
-            className="font-semibold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 ml-1 hover:underline"
-          >
-            <UserPlus className="w-3 h-3" /> Create Account
-          </Link>
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="password">Password</Label>
         </div>
-      </CardContent>
-    </Card>
+        <PasswordInput
+          id="password"
+          placeholder="Enter your password"
+          value={password}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+          disabled={loading}
+          required
+          autoComplete="current-password"
+          className="h-10 bg-white border-slate-300 text-slate-800 placeholder:text-slate-400"
+        />
+      </div>
+
+      <Button
+        type="submit"
+        disabled={loading}
+        className="h-10 w-full bg-indigo-600 text-white hover:bg-indigo-700"
+      >
+        {loading ? (
+          <span className="flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Signing in...
+          </span>
+        ) : (
+          <span className="flex items-center justify-center gap-2">
+            Sign In
+            <ArrowRight className="h-4 w-4" />
+          </span>
+        )}
+      </Button>
+
+      <p className="pt-2 text-center text-xs text-slate-500">
+        Don't have an account?{' '}
+        <Link to="/register" className="font-semibold text-indigo-600 hover:text-indigo-700 hover:underline">
+          Create one
+        </Link>
+      </p>
+    </form>
   );
 };

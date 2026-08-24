@@ -170,7 +170,7 @@ export const EditTicketModal = ({
             <label className="text-xs font-semibold text-slate-700">Description</label>
             <textarea
               rows={3}
-              className="w-full rounded-md border border-slate-200 bg-white p-3 text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-md border border-slate-200 bg-white p-3 text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               required
@@ -189,7 +189,7 @@ export const EditTicketModal = ({
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as 'low' | 'medium' | 'high')}
-                className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
                 disabled={loading}
               >
                 <option value="low">Low Priority</option>
@@ -207,7 +207,7 @@ export const EditTicketModal = ({
               <select
                 value={departmentId}
                 onChange={(e) => setDepartmentId(e.target.value)}
-                className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
                 required
                 disabled={loading}
               >

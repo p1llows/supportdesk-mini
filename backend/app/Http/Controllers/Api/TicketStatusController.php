@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Ticket;
+use App\Models\TicketActivity;
+use App\Services\TicketNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -85,6 +87,25 @@ class TicketStatusController extends Controller
 
         // 5. Persist the new status.
         $ticket->update(['status' => $target]);
+
+        // Log status change activity (Day 5)
+        TicketActivity::create([
+            'ticket_id' => $ticket->id,
+            'user_id'   => $request->user()->id,
+            'type'      => 'status_change',
+            'metadata'  => [
+                'old' => $current,
+                'new' => $target,
+            ],
+        ]);
+
+        // Notify related users (e.g. the requester) about the status change
+        TicketNotificationService::notifyRelatedUsers(
+            $ticket,
+            'status_change',
+            "Status of \"{$ticket->title}\" changed from {$current} to {$target}",
+            $request->user()->id
+        );
 
         return response()->json([
             'status' => 'success',

@@ -1,22 +1,12 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
+  Pencil,
   Ticket,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  User as UserIcon,
-  Building2,
-  Edit3,
   Trash2,
   X,
-  PlayCircle,
-  CheckCheck,
-  Lock,
-  RotateCcw,
-  RefreshCw,
 } from 'lucide-react';
 
 export interface TicketData {
@@ -46,6 +36,70 @@ interface TicketsTableProps {
   onStatusChange?: (ticket: TicketData, newStatus: TicketData['status']) => void;
 }
 
+// Avatar initials component
+function Avatar({ name, color }: { name: string; color: string }) {
+  const initials = name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+  return (
+    <div
+      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
+      style={{ backgroundColor: color }}
+    >
+      {initials}
+    </div>
+  );
+}
+
+// Generate deterministic color from name
+function nameColor(name: string): string {
+  const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6', '#06b6d4', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+}
+
+const priorityStyles: Record<string, string> = {
+  low: 'text-emerald-600',
+  medium: 'text-amber-600',
+  high: 'text-red-600',
+};
+
+const priorityLabels: Record<string, string> = {
+  low: 'Low',
+  medium: 'Medium',
+  high: 'High',
+};
+
+const statusStyles: Record<string, { dot: string; text: string }> = {
+  open: { dot: 'bg-emerald-400', text: 'text-emerald-400' },
+  in_progress: { dot: 'bg-blue-400', text: 'text-blue-400' },
+  resolved: { dot: 'bg-purple-400', text: 'text-purple-400' },
+  closed: { dot: 'bg-slate-400', text: 'text-slate-400' },
+};
+
+const statusLabels: Record<string, string> = {
+  open: 'Open',
+  in_progress: 'In Progress',
+  resolved: 'Resolved',
+  closed: 'Closed',
+};
+
+// Forward-only status workflow per role (mirrors backend TicketStatusController):
+// Agent/Admin: open → in_progress → resolved. Admin only: resolved → closed, closed → open.
+function allowedNextStatuses(role: string, current: TicketData['status']): TicketData['status'][] {
+  const next: TicketData['status'][] = [];
+  if (role === 'agent' || role === 'admin') {
+    if (current === 'open') next.push('in_progress');
+    if (current === 'in_progress') next.push('resolved');
+  }
+  if (role === 'admin') {
+    if (current === 'resolved') next.push('closed');
+    if (current === 'closed') next.push('open');
+  }
+  return next;
+}
+
 export const TicketsTable: React.FC<TicketsTableProps> = ({
   tickets,
   loading,
@@ -54,116 +108,19 @@ export const TicketsTable: React.FC<TicketsTableProps> = ({
   onStatusChange,
 }) => {
   const { user } = useAuth();
+  const role = user?.role ?? 'requester';
+  const canEdit = role === 'admin' || role === 'requester';
+  const canDelete = role === 'admin';
+  const canChangeStatus = role === 'agent' || role === 'admin';
   const [ticketToDelete, setTicketToDelete] = useState<TicketData | null>(null);
-  const [statusUpdating, setStatusUpdating] = useState<number | null>(null);
-
-  const getPriorityBadge = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return <Badge variant="destructive">High</Badge>;
-      case 'medium':
-        return <Badge className="bg-amber-100 text-amber-800 border-amber-200">Medium</Badge>;
-      default:
-        return <Badge variant="outline">Low</Badge>;
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'open':
-        return (
-          <Badge className="bg-blue-100 text-blue-800 border-blue-200">
-            <Clock className="w-3 h-3 mr-1 inline" />
-            Open
-          </Badge>
-        );
-      case 'in_progress':
-        return (
-          <Badge className="bg-purple-100 text-purple-800 border-purple-200">
-            <AlertCircle className="w-3 h-3 mr-1 inline" />
-            In Progress
-          </Badge>
-        );
-      case 'resolved':
-        return (
-          <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">
-            <CheckCircle2 className="w-3 h-3 mr-1 inline" />
-            Resolved
-          </Badge>
-        );
-      case 'closed':
-        return (
-          <Badge variant="secondary">
-            Closed
-          </Badge>
-        );
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '—';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    return new Date(dateString).toISOString().slice(0, 10);
   };
 
-  const canEditTicket = (ticket: TicketData): boolean => {
-    if (ticket.status === 'closed') return false; // Universal closed ticket lock
-    if (user?.role === 'admin' || user?.role === 'agent') return true;
-    if (user?.role === 'requester') {
-      return ticket.status === 'open' && ticket.requester?.id === user.id;
-    }
-    return false;
-  };
-
-  const canDeleteTicket = (): boolean => {
-    return user?.role === 'admin'; // Delete is strictly for Admin
-  };
-
-  /**
-   * Returns the single next allowed status for this ticket given the current user's role,
-   * or null if no transition is available to this user.
-   *
-   * Follows the plan's permission matrix exactly:
-   *   Agent/Admin : open → in_progress, in_progress → resolved
-   *   Admin only  : resolved → closed, closed → open
-   */
-  const getNextStatus = (ticket: TicketData): TicketData['status'] | null => {
-    const role = user?.role;
-    if (role === 'requester' || !role) return null;
-    if (ticket.status === 'open')        return 'in_progress';
-    if (ticket.status === 'in_progress') return 'resolved';
-    if (ticket.status === 'resolved' && role === 'admin') return 'closed';
-    if (ticket.status === 'closed'   && role === 'admin') return 'open';
-    return null;
-  };
-
-  const getStatusActionLabel = (nextStatus: TicketData['status']): { label: string; icon: React.ReactNode; className: string } => {
-    switch (nextStatus) {
-      case 'in_progress':
-        return { label: 'Start', icon: <PlayCircle className="w-3.5 h-3.5" />, className: 'text-purple-700 hover:bg-purple-50 hover:text-purple-800' };
-      case 'resolved':
-        return { label: 'Resolve', icon: <CheckCheck className="w-3.5 h-3.5" />, className: 'text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800' };
-      case 'closed':
-        return { label: 'Close', icon: <Lock className="w-3.5 h-3.5" />, className: 'text-slate-700 hover:bg-slate-100 hover:text-slate-900' };
-      case 'open':
-        return { label: 'Reopen', icon: <RotateCcw className="w-3.5 h-3.5" />, className: 'text-blue-700 hover:bg-blue-50 hover:text-blue-800' };
-      default:
-        return { label: nextStatus, icon: null, className: '' };
-    }
-  };
-
-  const handleStatusButtonClick = async (ticket: TicketData, nextStatus: TicketData['status']) => {
-    if (!onStatusChange || statusUpdating !== null) return;
-    setStatusUpdating(ticket.id);
-    await onStatusChange(ticket, nextStatus);
-    setStatusUpdating(null);
+  const formatTicketId = (id: number) => {
+    return `TK-${String(id).padStart(3, '0')}`;
   };
 
   const confirmDelete = () => {
@@ -175,7 +132,7 @@ export const TicketsTable: React.FC<TicketsTableProps> = ({
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm space-y-4">
+      <div className="rounded-lg border border-slate-200 bg-white p-8 space-y-4">
         <div className="flex items-center justify-between">
           <div className="h-6 w-36 bg-slate-200 rounded animate-pulse" />
           <div className="h-6 w-24 bg-slate-200 rounded animate-pulse" />
@@ -191,146 +148,127 @@ export const TicketsTable: React.FC<TicketsTableProps> = ({
 
   if (tickets.length === 0) {
     return (
-      <div className="bg-white rounded-xl border border-slate-200 p-12 text-center shadow-sm space-y-3">
+      <div className="rounded-lg border border-slate-200 bg-white p-12 text-center space-y-3">
         <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
           <Ticket className="w-6 h-6" />
         </div>
         <h3 className="font-bold text-slate-800 text-base">No Tickets Found</h3>
         <p className="text-xs text-slate-500 max-w-sm mx-auto">
-          There are currently no tickets matching your active role view.
+          There are currently no tickets matching your active filters.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-      <div className="p-4 md:p-5 border-b border-slate-100 flex items-center justify-between">
-        <div>
-          <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
-            <Ticket className="w-4 h-4 text-blue-600" />
-            Support Ticket Queue
-          </h3>
-          <p className="text-xs text-slate-500">
-            Displaying {tickets.length} ticket{tickets.length === 1 ? '' : 's'}
-          </p>
-        </div>
-      </div>
-
+    <div className="overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs">
-          <thead className="bg-slate-50 text-slate-600 font-semibold uppercase tracking-wider border-b border-slate-100">
+        <table className="w-full border-collapse text-left text-sm">
+          <thead className="border-b border-slate-200 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
             <tr>
               <th className="px-4 py-3">ID</th>
-              <th className="px-4 py-3">Title & Description</th>
+              <th className="px-4 py-3">Title</th>
               <th className="px-4 py-3">Department</th>
-              <th className="px-4 py-3">Requester</th>
               <th className="px-4 py-3">Priority</th>
               <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3 text-right">Submitted Date</th>
+              <th className="px-4 py-3">Requester</th>
+              <th className="px-4 py-3">Created</th>
               <th className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {tickets.map((ticket) => {
-              const showEdit = canEditTicket(ticket);
-              const showDelete = canDeleteTicket();
+              const sStyle = statusStyles[ticket.status] ?? statusStyles.open;
 
               return (
-                <tr key={ticket.id} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="px-4 py-3 font-mono font-bold text-slate-500">
-                    #{ticket.id}
+                <tr key={ticket.id} className="border-b border-slate-100 transition-colors hover:bg-slate-50">
+                  <td className="px-4 py-3.5 font-mono text-xs text-slate-500">
+                    {formatTicketId(ticket.id)}
                   </td>
-                  <td className="px-4 py-3 max-w-md">
-                    <div className="font-bold text-slate-900 text-sm line-clamp-1">
+                  <td className="px-4 py-3.5 max-w-xs">
+                    <Link
+                      to={`/tickets/${ticket.id}`}
+                      className="font-semibold text-slate-900 text-sm line-clamp-1 hover:text-indigo-600 transition-colors"
+                      title={ticket.title}
+                    >
                       {ticket.title}
-                    </div>
-                    <div className="text-slate-500 line-clamp-1 text-xs mt-0.5">
-                      {ticket.description}
-                    </div>
+                    </Link>
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    {ticket.department ? (
-                      <Badge variant="outline" className="bg-slate-100 text-slate-700 border-slate-300 font-medium">
-                        <Building2 className="w-3 h-3 mr-1 text-slate-500 inline" />
-                        {ticket.department.name}
-                      </Badge>
+                  <td className="px-4 py-3.5 text-sm text-slate-600 whitespace-nowrap">
+                    {ticket.department?.name ?? '—'}
+                  </td>
+                  <td className="px-4 py-3.5 whitespace-nowrap">
+                    <span className={`text-sm font-medium ${priorityStyles[ticket.priority] ?? 'text-slate-400'}`}>
+                      {priorityLabels[ticket.priority] ?? ticket.priority}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3.5 whitespace-nowrap">
+                    {canChangeStatus ? (
+                      <select
+                        value={ticket.status}
+                        onChange={(e) => onStatusChange?.(ticket, e.target.value as TicketData['status'])}
+                        aria-label={`Change status for ${formatTicketId(ticket.id)}`}
+                        className={`h-8 rounded-md border border-slate-300 bg-white px-2 text-sm font-medium ${sStyle.text} outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500`}
+                      >
+                        <option value={ticket.status}>{statusLabels[ticket.status] ?? ticket.status}</option>
+                        {allowedNextStatuses(role, ticket.status).map((status) => (
+                          <option key={status} value={status}>
+                            {statusLabels[status] ?? status}
+                          </option>
+                        ))}
+                      </select>
                     ) : (
-                      <span className="text-slate-400">—</span>
+                      <span className={`inline-flex items-center gap-1.5 text-sm ${sStyle.text}`}>
+                        <span className={`inline-block h-2 w-2 rounded-full ${sStyle.dot}`} />
+                        {statusLabels[ticket.status] ?? ticket.status}
+                      </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
+                  <td className="px-4 py-3.5 whitespace-nowrap">
                     {ticket.requester ? (
-                      <div className="flex items-center gap-1.5 text-slate-700 font-medium">
-                        <UserIcon className="w-3.5 h-3.5 text-slate-400" />
-                        <span>{ticket.requester.name}</span>
+                      <div className="flex items-center gap-2">
+                        <Avatar name={ticket.requester.name} color={nameColor(ticket.requester.name)} />
+                        <span className="text-sm text-slate-700">{ticket.requester.name}</span>
                       </div>
                     ) : (
                       <span className="text-slate-400">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    {getPriorityBadge(ticket.priority)}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    {getStatusBadge(ticket.status)}
-                  </td>
-                  <td className="px-4 py-3 text-right text-slate-500 whitespace-nowrap">
+                  <td className="px-4 py-3.5 text-sm text-slate-500 whitespace-nowrap">
                     {formatDate(ticket.created_at)}
                   </td>
-                  <td className="px-4 py-3 text-right whitespace-nowrap">
-                    <div className="flex items-center justify-end gap-1">
-                      {/* Status transition button (Agent/Admin only) */}
-                      {(() => {
-                        const nextStatus = getNextStatus(ticket);
-                        if (!nextStatus || !onStatusChange) return null;
-                        const { label, icon, className: btnClass } = getStatusActionLabel(nextStatus);
-                        const isUpdating = statusUpdating === ticket.id;
-                        return (
-                          <Button
-                            id={`status-btn-${ticket.id}`}
-                            variant="ghost"
-                            size="sm"
-                            disabled={isUpdating}
-                            onClick={() => handleStatusButtonClick(ticket, nextStatus)}
-                            className={`h-8 px-2 gap-1 text-xs font-medium ${btnClass}`}
-                            title={`Change status to ${nextStatus.replace('_', ' ')}`}
+                  <td className="px-4 py-3.5 whitespace-nowrap text-right">
+                    {(canEdit || canDelete) && (
+                      <div className="flex items-center justify-end gap-1">
+                        {canEdit && (
+                          <button
+                            type="button"
+                            onClick={() => onEditTicket?.(ticket)}
+                            disabled={role === 'requester' && ticket.status !== 'open'}
+                            className="rounded-md p-2 text-slate-500 transition-colors hover:bg-indigo-50 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-500"
+                            title={
+                              role === 'requester' && ticket.status !== 'open'
+                                ? 'Requesters can only edit their own open tickets'
+                                : `Edit ${formatTicketId(ticket.id)}`
+                            }
+                            aria-label={`Edit ticket ${formatTicketId(ticket.id)}`}
                           >
-                            {isUpdating ? (
-                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                            ) : (
-                              icon
-                            )}
-                            {label}
-                          </Button>
-                        );
-                      })()}
-                      {showEdit && onEditTicket && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onEditTicket(ticket)}
-                          className="h-8 px-2 text-slate-600 hover:text-amber-700 hover:bg-amber-50"
-                          title="Edit Ticket"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                        </Button>
-                      )}
-                      {showDelete && onDeleteTicket && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setTicketToDelete(ticket)}
-                          className="h-8 px-2 text-slate-600 hover:text-red-700 hover:bg-red-50"
-                          title="Delete Ticket"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      )}
-                      {getNextStatus(ticket) === null && !showEdit && !showDelete && (
-                        <span className="text-slate-400 text-xs px-2">—</span>
-                      )}
-                    </div>
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                        )}
+                        {canDelete && (
+                          <button
+                            type="button"
+                            onClick={() => setTicketToDelete(ticket)}
+                            className="rounded-md p-2 text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600"
+                            title={`Delete ${formatTicketId(ticket.id)}`}
+                            aria-label={`Delete ticket ${formatTicketId(ticket.id)}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </td>
                 </tr>
               );
@@ -341,33 +279,34 @@ export const TicketsTable: React.FC<TicketsTableProps> = ({
 
       {/* Delete Ticket Confirmation Dialog */}
       {ticketToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200">
           <div
             className="w-full max-w-sm bg-white rounded-xl border border-slate-200 shadow-2xl p-6 space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div className="flex items-center gap-2 text-red-600 font-bold">
                 <Trash2 className="w-5 h-5" />
                 <span>Confirm Ticket Deletion</span>
               </div>
               <button
                 onClick={() => setTicketToDelete(null)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <p className="text-xs text-slate-600">
-              Are you sure you want to permanently delete ticket <strong className="text-slate-900">#{ticketToDelete.id}</strong> ("{ticketToDelete.title}")? This action cannot be undone.
+            <p className="text-xs text-slate-500">
+              Are you sure you want to permanently delete ticket <strong className="text-slate-800">{formatTicketId(ticketToDelete.id)}</strong> ("{ticketToDelete.title}")? This action cannot be undone.
             </p>
 
             <div className="flex items-center justify-end gap-2 pt-2">
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={() => setTicketToDelete(null)}
+                className="text-slate-500 hover:text-slate-800 hover:bg-slate-100"
               >
                 Cancel
               </Button>
