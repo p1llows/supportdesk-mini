@@ -4,6 +4,7 @@
 .env.*.local
 backend/.env
 frontend/.env
+*.agent
 
 # Dependencies & Build Artifacts
 **/node_modules/
