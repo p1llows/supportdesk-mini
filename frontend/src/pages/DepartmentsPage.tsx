@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Pencil, Loader2, AlertCircle } from 'lucide-react';
+import { PlusCircle, Pencil, Loader2, AlertCircle, Building2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { DepartmentModal } from '@/components/departments/DepartmentModal';
 
@@ -145,28 +145,33 @@ export const DepartmentsPage = () => {
       )}
 
       {/* Department Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {departments.map((dept) => {
           const deptAgents = getAgentsForDepartment(dept.id);
           return (
             <div
               key={dept.id}
-              className="rounded-lg border border-slate-200 bg-white p-5 flex flex-col"
+              className="flex flex-col rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all hover:border-slate-300 hover:shadow-sm"
             >
               {/* Card header */}
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900">{dept.name}</h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    {deptAgents.length} agent{deptAgents.length !== 1 ? 's' : ''}
-                  </p>
+              <div className="mb-4 flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                    <Building2 className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">{dept.name}</h3>
+                    <p className="mt-0.5 text-xs font-medium text-slate-500">
+                      {deptAgents.length} agent{deptAgents.length !== 1 ? 's' : ''} assigned
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={() => {
                     setEditingDepartment(dept);
                     setIsModalOpen(true);
                   }}
-                  className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                  className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
                   title="Edit department"
                 >
                   <Pencil className="w-4 h-4" />
@@ -174,18 +179,20 @@ export const DepartmentsPage = () => {
               </div>
 
               {/* Agents list */}
-              <div className="space-y-3 flex-1">
+              <div className="flex-1 space-y-2.5">
                 {deptAgents.length === 0 ? (
-                  <p className="text-xs text-slate-500 italic">No agents assigned</p>
+                  <p className="rounded-lg bg-slate-50 px-3 py-2.5 text-xs text-slate-500 italic">
+                    No agents assigned yet
+                  </p>
                 ) : (
                   deptAgents.map((agent) => (
-                    <div key={agent.id} className="flex items-center gap-3">
+                    <div key={agent.id} className="flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-slate-50">
                       <Avatar name={agent.name} color={nameColor(agent.name)} />
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-slate-800 truncate">{agent.name}</p>
-                        <p className="text-xs text-slate-500 truncate">{agent.email}</p>
+                        <p className="truncate text-sm font-semibold text-slate-800">{agent.name}</p>
+                        <p className="truncate text-xs text-slate-500">{agent.email}</p>
                       </div>
-                      <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full whitespace-nowrap">
+                      <span className="whitespace-nowrap rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-200">
                         Active
                       </span>
                     </div>

@@ -5,9 +5,11 @@
 
 @layer base {
   body {
-    background-color: #f8fafc;
+    background-color: #f6f8fb;
     color: #0f172a;
     font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 

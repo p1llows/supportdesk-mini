@@ -9,6 +9,10 @@ import { TicketFilters, type DepartmentOption } from '@/components/tickets/Ticke
 import { Button } from '@/components/ui/button';
 import {
   AlertCircle,
+  CheckCircle2,
+  Clock,
+  Layers,
+  Loader2,
   PlusCircle,
 } from 'lucide-react';
 
@@ -250,7 +254,7 @@ export const DashboardPage = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">{pageTitle}</h1>
           <p className="mt-1 text-sm text-slate-500">{pageSubtitle}</p>
@@ -258,11 +262,11 @@ export const DashboardPage = () => {
 
         {/* Submit Ticket Action — Restricted strictly to Requesters */}
         {user?.role === 'requester' && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2.5">
             {!user.department_id && (
               <Link
                 to="/profile"
-                className="text-xs text-amber-700 bg-amber-50 hover:bg-amber-100 px-2 py-1.5 rounded border border-amber-200 font-medium transition-colors"
+                className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800 transition-colors hover:bg-amber-100"
               >
                 Set your department to submit tickets →
               </Link>
@@ -275,9 +279,9 @@ export const DashboardPage = () => {
                   setIsModalOpen(true);
                 }
               }}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white"
+              className="bg-indigo-600 text-white shadow-xs hover:bg-indigo-700"
             >
-              <PlusCircle className="w-4 h-4 mr-2" />
+              <PlusCircle className="mr-2 h-4 w-4" />
               Submit New Ticket
             </Button>
           </div>
@@ -286,8 +290,8 @@ export const DashboardPage = () => {
 
       {/* Error Alert */}
       {error && (
-        <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 shrink-0" />
+        <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
           <div className="text-sm">
             <span className="font-semibold">Dashboard Access Notice:</span> {error}
           </div>
@@ -295,45 +299,66 @@ export const DashboardPage = () => {
       )}
 
       {/* Stat Metric Cards Grid */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Total */}
-        <div className="rounded-lg border border-slate-200 bg-white p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Total</p>
-          <p className="mt-2 text-3xl font-extrabold text-slate-900">
+        <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all hover:border-slate-300 hover:shadow-sm">
+          <div className="flex items-center justify-between">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Tickets</p>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+              <Layers className="h-4 w-4" />
+            </div>
+          </div>
+          <p className="mt-3 text-3xl font-extrabold tabular-nums tracking-tight text-slate-900">
             {loading ? <span className="animate-pulse text-slate-400">—</span> : stats?.total_tickets ?? 0}
           </p>
+          <p className="mt-1 text-xs text-slate-500">all recorded requests</p>
         </div>
 
         {/* Open */}
-        <div className="rounded-lg border border-slate-200 bg-white p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Open</p>
-          <p className="mt-2 text-3xl font-extrabold text-amber-600">
+        <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all hover:border-amber-200 hover:shadow-sm">
+          <div className="flex items-center justify-between">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Open</p>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+              <Clock className="h-4 w-4" />
+            </div>
+          </div>
+          <p className="mt-3 text-3xl font-extrabold tabular-nums tracking-tight text-amber-600">
             {loading ? <span className="animate-pulse text-slate-400">—</span> : stats?.open_tickets ?? 0}
           </p>
           <p className="mt-1 text-xs text-slate-500">awaiting assignment</p>
         </div>
 
         {/* In Progress */}
-        <div className="rounded-lg border border-slate-200 bg-white p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">In Progress</p>
-          <p className="mt-2 text-3xl font-extrabold text-blue-600">
+        <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all hover:border-blue-200 hover:shadow-sm">
+          <div className="flex items-center justify-between">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">In Progress</p>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+              <Loader2 className="h-4 w-4" />
+            </div>
+          </div>
+          <p className="mt-3 text-3xl font-extrabold tabular-nums tracking-tight text-blue-600">
             {loading ? <span className="animate-pulse text-slate-400">—</span> : stats?.in_progress_tickets ?? 0}
           </p>
           <p className="mt-1 text-xs text-slate-500">being worked on</p>
         </div>
 
         {/* Resolved / Closed */}
-        <div className="rounded-lg border border-slate-200 bg-white p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Resolved / Closed</p>
-          <p className="mt-2 text-3xl font-extrabold text-emerald-600">
+        <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all hover:border-emerald-200 hover:shadow-sm">
+          <div className="flex items-center justify-between">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Resolved / Closed</p>
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+              <CheckCircle2 className="h-4 w-4" />
+            </div>
+          </div>
+          <p className="mt-3 text-3xl font-extrabold tabular-nums tracking-tight text-emerald-600">
             {loading ? <span className="animate-pulse text-slate-400">—</span> : resolvedClosed}
           </p>
           <p className="mt-1 text-xs text-slate-500">completed</p>
         </div>
       </section>
 
-      {/* Ticket Filters Component */}
-      <section>
+      {/* Unified Tickets Card: Filters + Table */}
+      <section className="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-xs">
         <TicketFilters
           search={searchInput}
           status={statusFilter}
@@ -349,10 +374,7 @@ export const DashboardPage = () => {
           onDepartmentIdChange={setDepartmentIdFilter}
           onClearFilters={handleClearFilters}
         />
-      </section>
 
-      {/* Tickets Table Component */}
-      <section>
         <TicketsTable
           tickets={tickets}
           loading={ticketsLoading}

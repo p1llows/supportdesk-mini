@@ -24,6 +24,14 @@ export function AuthShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen bg-white">
       {/* Branded panel */}
       <div className="relative hidden w-1/2 overflow-hidden bg-slate-950 lg:flex lg:flex-col xl:w-[55%]">
+        {/* Subtle architectural dot pattern */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: 'radial-gradient(#64748b 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+          }}
+        />
         {/* Decorative gradient accents */}
         <div className="pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full bg-indigo-600/30 blur-3xl" />
         <div className="pointer-events-none absolute -right-24 bottom-0 h-80 w-80 rounded-full bg-blue-500/20 blur-3xl" />
@@ -72,7 +80,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
       </div>
 
       {/* Form panel */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col bg-[#f6f8fb]">
         {/* Mobile brand header */}
         <div className="flex items-center gap-2 px-6 pt-6 lg:hidden">
           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-indigo-600 text-white">
@@ -82,7 +90,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
         </div>
 
         <div className="flex flex-1 items-center justify-center px-6 py-10">
-          <div className="w-full max-w-sm">{children}</div>
+          <div className="w-full max-w-md rounded-2xl border border-slate-200/90 bg-white p-8 shadow-sm">{children}</div>
         </div>
       </div>
     </div>

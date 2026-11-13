@@ -60,9 +60,9 @@ function nameColor(name: string): string {
 }
 
 const priorityStyles: Record<string, string> = {
-  low: 'text-emerald-600',
-  medium: 'text-amber-600',
-  high: 'text-red-600',
+  low: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+  medium: 'bg-amber-50 text-amber-700 ring-amber-200',
+  high: 'bg-red-50 text-red-700 ring-red-200',
 };
 
 const priorityLabels: Record<string, string> = {
@@ -71,11 +71,11 @@ const priorityLabels: Record<string, string> = {
   high: 'High',
 };
 
-const statusStyles: Record<string, { dot: string; text: string }> = {
-  open: { dot: 'bg-emerald-400', text: 'text-emerald-400' },
-  in_progress: { dot: 'bg-blue-400', text: 'text-blue-400' },
-  resolved: { dot: 'bg-purple-400', text: 'text-purple-400' },
-  closed: { dot: 'bg-slate-400', text: 'text-slate-400' },
+const statusStyles: Record<string, { dot: string; text: string; pill: string }> = {
+  open: { dot: 'bg-emerald-500', text: 'text-emerald-700', pill: 'bg-emerald-50 text-emerald-700 ring-emerald-200' },
+  in_progress: { dot: 'bg-blue-500', text: 'text-blue-700', pill: 'bg-blue-50 text-blue-700 ring-blue-200' },
+  resolved: { dot: 'bg-purple-500', text: 'text-purple-700', pill: 'bg-purple-50 text-purple-700 ring-purple-200' },
+  closed: { dot: 'bg-slate-400', text: 'text-slate-600', pill: 'bg-slate-100 text-slate-600 ring-slate-200' },
 };
 
 const statusLabels: Record<string, string> = {
@@ -132,14 +132,14 @@ export const TicketsTable: React.FC<TicketsTableProps> = ({
 
   if (loading) {
     return (
-      <div className="rounded-lg border border-slate-200 bg-white p-8 space-y-4">
+      <div className="p-8 space-y-4">
         <div className="flex items-center justify-between">
-          <div className="h-6 w-36 bg-slate-200 rounded animate-pulse" />
-          <div className="h-6 w-24 bg-slate-200 rounded animate-pulse" />
+          <div className="h-5 w-36 bg-slate-200 rounded animate-pulse" />
+          <div className="h-5 w-24 bg-slate-200 rounded animate-pulse" />
         </div>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-12 w-full bg-slate-100 rounded animate-pulse" />
+            <div key={i} className="h-12 w-full bg-slate-100 rounded-lg animate-pulse" />
           ))}
         </div>
       </div>
@@ -148,7 +148,7 @@ export const TicketsTable: React.FC<TicketsTableProps> = ({
 
   if (tickets.length === 0) {
     return (
-      <div className="rounded-lg border border-slate-200 bg-white p-12 text-center space-y-3">
+      <div className="p-14 text-center space-y-3">
         <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
           <Ticket className="w-6 h-6" />
         </div>
@@ -164,16 +164,16 @@ export const TicketsTable: React.FC<TicketsTableProps> = ({
     <div className="overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-left text-sm">
-          <thead className="border-b border-slate-200 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+          <thead className="border-b border-slate-200/80 bg-slate-50/50 text-[11px] font-bold uppercase tracking-wider text-slate-500">
             <tr>
-              <th className="px-4 py-3">ID</th>
-              <th className="px-4 py-3">Title</th>
-              <th className="px-4 py-3">Department</th>
-              <th className="px-4 py-3">Priority</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Requester</th>
-              <th className="px-4 py-3">Created</th>
-              <th className="px-4 py-3 text-right">Actions</th>
+              <th className="px-5 py-3.5">ID</th>
+              <th className="px-4 py-3.5">Title</th>
+              <th className="px-4 py-3.5">Department</th>
+              <th className="px-4 py-3.5">Priority</th>
+              <th className="px-4 py-3.5">Status</th>
+              <th className="px-4 py-3.5">Requester</th>
+              <th className="px-4 py-3.5">Created</th>
+              <th className="px-5 py-3.5 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -181,11 +181,13 @@ export const TicketsTable: React.FC<TicketsTableProps> = ({
               const sStyle = statusStyles[ticket.status] ?? statusStyles.open;
 
               return (
-                <tr key={ticket.id} className="border-b border-slate-100 transition-colors hover:bg-slate-50">
-                  <td className="px-4 py-3.5 font-mono text-xs text-slate-500">
-                    {formatTicketId(ticket.id)}
+                <tr key={ticket.id} className="transition-colors hover:bg-slate-50/90">
+                  <td className="px-5 py-4 font-mono text-xs font-semibold text-slate-500 whitespace-nowrap">
+                    <Link to={`/tickets/${ticket.id}`} className="hover:text-indigo-600 transition-colors">
+                      {formatTicketId(ticket.id)}
+                    </Link>
                   </td>
-                  <td className="px-4 py-3.5 max-w-xs">
+                  <td className="px-4 py-4 max-w-xs">
                     <Link
                       to={`/tickets/${ticket.id}`}
                       className="font-semibold text-slate-900 text-sm line-clamp-1 hover:text-indigo-600 transition-colors"
@@ -194,21 +196,21 @@ export const TicketsTable: React.FC<TicketsTableProps> = ({
                       {ticket.title}
                     </Link>
                   </td>
-                  <td className="px-4 py-3.5 text-sm text-slate-600 whitespace-nowrap">
+                  <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
                     {ticket.department?.name ?? '—'}
                   </td>
-                  <td className="px-4 py-3.5 whitespace-nowrap">
-                    <span className={`text-sm font-medium ${priorityStyles[ticket.priority] ?? 'text-slate-400'}`}>
+                  <td className="px-4 py-4 whitespace-nowrap">
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${priorityStyles[ticket.priority] ?? 'bg-slate-100 text-slate-600 ring-slate-200'}`}>
                       {priorityLabels[ticket.priority] ?? ticket.priority}
                     </span>
                   </td>
-                  <td className="px-4 py-3.5 whitespace-nowrap">
+                  <td className="px-4 py-4 whitespace-nowrap">
                     {canChangeStatus ? (
                       <select
                         value={ticket.status}
                         onChange={(e) => onStatusChange?.(ticket, e.target.value as TicketData['status'])}
                         aria-label={`Change status for ${formatTicketId(ticket.id)}`}
-                        className={`h-8 rounded-md border border-slate-300 bg-white px-2 text-sm font-medium ${sStyle.text} outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500`}
+                        className={`h-8 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold ${sStyle.text} outline-none transition-shadow focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20`}
                       >
                         <option value={ticket.status}>{statusLabels[ticket.status] ?? ticket.status}</option>
                         {allowedNextStatuses(role, ticket.status).map((status) => (
@@ -218,26 +220,26 @@ export const TicketsTable: React.FC<TicketsTableProps> = ({
                         ))}
                       </select>
                     ) : (
-                      <span className={`inline-flex items-center gap-1.5 text-sm ${sStyle.text}`}>
-                        <span className={`inline-block h-2 w-2 rounded-full ${sStyle.dot}`} />
+                      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${sStyle.pill}`}>
+                        <span className={`inline-block h-1.5 w-1.5 rounded-full ${sStyle.dot}`} />
                         {statusLabels[ticket.status] ?? ticket.status}
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3.5 whitespace-nowrap">
+                  <td className="px-4 py-4 whitespace-nowrap">
                     {ticket.requester ? (
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2.5">
                         <Avatar name={ticket.requester.name} color={nameColor(ticket.requester.name)} />
-                        <span className="text-sm text-slate-700">{ticket.requester.name}</span>
+                        <span className="text-sm font-medium text-slate-700">{ticket.requester.name}</span>
                       </div>
                     ) : (
                       <span className="text-slate-400">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3.5 text-sm text-slate-500 whitespace-nowrap">
+                  <td className="px-4 py-4 text-xs font-medium tabular-nums text-slate-500 whitespace-nowrap">
                     {formatDate(ticket.created_at)}
                   </td>
-                  <td className="px-4 py-3.5 whitespace-nowrap text-right">
+                  <td className="px-5 py-4 whitespace-nowrap text-right">
                     {(canEdit || canDelete) && (
                       <div className="flex items-center justify-end gap-1">
                         {canEdit && (

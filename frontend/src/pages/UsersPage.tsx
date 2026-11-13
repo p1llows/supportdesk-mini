@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, UserPlus, Trash2, X } from 'lucide-react';
+import { Search, UserPlus, Trash2, X, ShieldCheck, Headset, UserRound } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { CreateUserModal } from '@/components/users/CreateUserModal';
@@ -123,86 +123,94 @@ export function UsersPage() {
       {/* Stat Cards */}
       <div className="grid gap-4 md:grid-cols-3">
         {[
-          { role: 'admin', label: 'Administrator', color: 'text-blue-600' },
-          { role: 'agent', label: 'Support Agents', color: 'text-blue-600' },
-          { role: 'requester', label: 'Requesters', color: 'text-emerald-600' },
-        ].map(({ role, label, color }) => (
-          <div key={role} className="rounded-lg border border-slate-200 bg-white p-5">
-            <p className={`text-3xl font-extrabold ${color}`}>{count(role)}</p>
-            <p className="mt-2 text-sm font-semibold text-slate-500">{label}</p>
+          { role: 'admin', label: 'Administrators', color: 'text-indigo-600', iconBg: 'bg-indigo-50 text-indigo-600', Icon: ShieldCheck },
+          { role: 'agent', label: 'Support Agents', color: 'text-blue-600', iconBg: 'bg-blue-50 text-blue-600', Icon: Headset },
+          { role: 'requester', label: 'Requesters', color: 'text-emerald-600', iconBg: 'bg-emerald-50 text-emerald-600', Icon: UserRound },
+        ].map(({ role, label, color, iconBg, Icon }) => (
+          <div key={role} className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all hover:border-slate-300 hover:shadow-sm">
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{label}</p>
+              <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${iconBg}`}>
+                <Icon className="h-4 w-4" />
+              </div>
+            </div>
+            <p className={`mt-3 text-3xl font-extrabold tabular-nums tracking-tight ${color}`}>{count(role)}</p>
           </div>
         ))}
       </div>
 
-      {/* Search + Results Count */}
-      <div className="flex items-center justify-between">
-        <div className="relative w-full max-w-sm">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search users..."
-            className="h-9 w-full rounded-md border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-          />
+      {/* Unified Search + Users Table Card */}
+      <div className="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-xs">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50/70 px-4 py-3.5 sm:px-5">
+          <div className="relative w-full max-w-sm">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search users..."
+              className="h-9 w-full rounded-lg border border-slate-300/90 bg-white pl-9 pr-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none transition-shadow focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+            />
+          </div>
+          <span className="inline-flex items-center rounded-full bg-slate-200/70 px-2.5 py-1 text-xs font-semibold tabular-nums text-slate-600">
+            {filtered.length} {filtered.length === 1 ? 'result' : 'results'}
+          </span>
         </div>
-        <span className="text-xs text-slate-500">{filtered.length} results</span>
-      </div>
 
-      {/* Users Table */}
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-slate-200 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-            <tr>
-              <th className="px-5 py-3">User</th>
-              <th className="px-5 py-3">Email</th>
-              <th className="px-5 py-3">Role</th>
-              <th className="px-5 py-3">Department</th>
-              <th className="px-5 py-3">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((entry) => (
-              <tr key={entry.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
-                <td className="px-5 py-4">
-                  <div className="flex items-center gap-3">
-                    <Avatar name={entry.name} color={nameColor(entry.name)} />
-                    <span className="font-semibold text-slate-900">{entry.name}</span>
-                  </div>
-                </td>
-                <td className="px-5 py-4 text-sm text-slate-500">{entry.email}</td>
-                <td className="px-5 py-4">
-                  <span className={`text-sm font-medium ${roleStyles[entry.role] ?? 'text-slate-400'}`}>
-                    {roleLabels[entry.role] ?? entry.role}
-                  </span>
-                </td>
-                <td className="px-5 py-4 text-sm text-slate-500">
-                  {entry.role === 'admin'
-                    ? 'All departments'
-                    : entry.department?.name ?? '—'}
-                </td>
-                <td className="px-5 py-4">
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setEditUser(entry)}
-                      className="text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
-                    >
-                      Edit
-                    </button>
-                    {/* Don't allow removing yourself */}
-                    {entry.id !== user?.id && (
-                      <button
-                        onClick={() => setDeleteUser(entry)}
-                        className="text-sm text-red-600 hover:text-red-700 font-medium transition-colors"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="border-b border-slate-200/80 bg-slate-50/50 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              <tr>
+                <th className="px-5 py-3.5">User</th>
+                <th className="px-5 py-3.5">Email</th>
+                <th className="px-5 py-3.5">Role</th>
+                <th className="px-5 py-3.5">Department</th>
+                <th className="px-5 py-3.5 text-right">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {filtered.map((entry) => (
+                <tr key={entry.id} className="transition-colors hover:bg-slate-50/90">
+                  <td className="px-5 py-4 whitespace-nowrap">
+                    <div className="flex items-center gap-3">
+                      <Avatar name={entry.name} color={nameColor(entry.name)} />
+                      <span className="font-semibold text-slate-900">{entry.name}</span>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4 text-sm text-slate-500 whitespace-nowrap">{entry.email}</td>
+                  <td className="px-5 py-4 whitespace-nowrap">
+                    <span className={`text-sm font-semibold ${roleStyles[entry.role] ?? 'text-slate-500'}`}>
+                      {roleLabels[entry.role] ?? entry.role}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4 text-sm text-slate-500 whitespace-nowrap">
+                    {entry.role === 'admin'
+                      ? 'All departments'
+                      : entry.department?.name ?? '—'}
+                  </td>
+                  <td className="px-5 py-4 whitespace-nowrap text-right">
+                    <div className="flex items-center justify-end gap-3">
+                      <button
+                        onClick={() => setEditUser(entry)}
+                        className="rounded-md px-2 py-1 text-xs font-semibold text-indigo-600 transition-colors hover:bg-indigo-50 hover:text-indigo-700"
+                      >
+                        Edit
+                      </button>
+                      {/* Don't allow removing yourself */}
+                      {entry.id !== user?.id && (
+                        <button
+                          onClick={() => setDeleteUser(entry)}
+                          className="rounded-md px-2 py-1 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50 hover:text-red-700"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Create User Modal */}
