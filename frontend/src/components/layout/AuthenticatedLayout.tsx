@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Building2, LifeBuoy, Ticket, UserRound, UsersRound } from 'lucide-react';
+import { Building2, Ticket, UserRound, UsersRound } from 'lucide-react';
 import { AppSidebar } from '@/components/layout/AppSidebar';
+import { BrandLogo } from '@/components/layout/BrandLogo';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
@@ -42,11 +43,8 @@ export function AuthenticatedLayout() {
       {/* Mobile header */}
       <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 px-4 py-3 backdrop-blur-md lg:hidden">
         <div className="flex items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-2 text-sm font-extrabold text-slate-900">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-indigo-600 text-white">
-              <LifeBuoy className="h-4 w-4" />
-            </div>
-            SupportDesk
+          <Link to="/" aria-label="SupportDesk Home">
+            <BrandLogo theme="light" size="sm" />
           </Link>
           <nav className="flex items-center gap-1">
             <NotificationBell />

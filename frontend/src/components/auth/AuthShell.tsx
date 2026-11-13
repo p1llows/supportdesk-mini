@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { Bell, LifeBuoy, Ticket, UsersRound } from 'lucide-react';
+import { Bell, Ticket, UsersRound } from 'lucide-react';
+import { BrandLogo } from '@/components/layout/BrandLogo';
 
 const features = [
   {
@@ -37,14 +38,8 @@ export function AuthShell({ children }: { children: ReactNode }) {
         <div className="pointer-events-none absolute -right-24 bottom-0 h-80 w-80 rounded-full bg-blue-500/20 blur-3xl" />
 
         {/* Brand */}
-        <div className="relative z-10 flex items-center gap-3 px-12 py-8">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-lg shadow-indigo-600/30">
-            <LifeBuoy className="h-5 w-5" />
-          </div>
-          <div>
-            <p className="text-sm font-extrabold tracking-tight text-white">SupportDesk</p>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Mini</p>
-          </div>
+        <div className="relative z-10 px-12 py-8">
+          <BrandLogo theme="dark" subtitle="Mini Portal" />
         </div>
 
         {/* Headline + features */}
@@ -82,11 +77,8 @@ export function AuthShell({ children }: { children: ReactNode }) {
       {/* Form panel */}
       <div className="flex min-w-0 flex-1 flex-col bg-[#f6f8fb]">
         {/* Mobile brand header */}
-        <div className="flex items-center gap-2 px-6 pt-6 lg:hidden">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-indigo-600 text-white">
-            <LifeBuoy className="h-4 w-4" />
-          </div>
-          <span className="text-sm font-extrabold tracking-tight text-slate-900">SupportDesk Mini</span>
+        <div className="px-6 pt-6 lg:hidden">
+          <BrandLogo theme="light" subtitle="Mini" size="sm" />
         </div>
 
         <div className="flex flex-1 items-center justify-center px-6 py-10">

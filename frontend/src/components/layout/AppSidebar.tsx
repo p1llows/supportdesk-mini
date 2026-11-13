@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
-import { Building2, LifeBuoy, LogOut, Ticket, UserRound, UsersRound, ChevronRight } from 'lucide-react';
+import { Building2, LogOut, Ticket, UserRound, UsersRound, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { BrandLogo } from '@/components/layout/BrandLogo';
 import { Sidebar } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -29,14 +30,8 @@ export function AppSidebar() {
       <div className="pointer-events-none absolute -top-20 -left-16 h-56 w-56 rounded-full bg-indigo-600/15 blur-3xl" />
 
       {/* Branding */}
-      <div className="relative z-10 flex items-center gap-3 border-b border-white/10 px-5 py-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-700 text-white shadow-md shadow-indigo-600/25">
-          <LifeBuoy className="h-4 w-4" />
-        </div>
-        <div>
-          <span className="block text-sm font-extrabold tracking-tight text-white">SupportDesk</span>
-          <span className="block text-[10px] font-semibold uppercase tracking-[0.18em] text-indigo-400/80">Mini Portal</span>
-        </div>
+      <div className="relative z-10 border-b border-white/10 px-5 py-5">
+        <BrandLogo theme="dark" subtitle="Mini Portal" />
       </div>
 
       {/* Navigation */}
