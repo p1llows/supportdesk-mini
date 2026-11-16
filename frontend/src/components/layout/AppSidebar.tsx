@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Building2, LogOut, Ticket, UserRound, UsersRound } from 'lucide-react';
+import { Activity, Building2, LayoutDashboard, LogOut, ShieldCheck, Ticket, UserRound, UsersRound } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { BrandLogo, BrandMark } from '@/components/layout/BrandLogo';
 import { Sidebar } from '@/components/ui/sidebar';
@@ -59,7 +59,16 @@ export function AppSidebar({ collapsed = false }: AppSidebarProps) {
               Workspace
             </p>
           )}
-          <NavLink to="/" end className={navClass} title="Tickets">
+          <NavLink to="/" end className={navClass} title="Dashboard">
+            {({ isActive }) => (
+              <>
+                <LayoutDashboard className={cn('h-4 w-4 shrink-0 transition-colors', isActive ? 'text-[#0F766E]' : 'text-stone-400 group-hover:text-stone-600')} />
+                {!collapsed && <span className="flex-1">Dashboard</span>}
+              </>
+            )}
+          </NavLink>
+
+          <NavLink to="/tickets" className={navClass} title="Tickets">
             {({ isActive }) => (
               <>
                 <Ticket className={cn('h-4 w-4 shrink-0 transition-colors', isActive ? 'text-[#0F766E]' : 'text-stone-400 group-hover:text-stone-600')} />
@@ -99,6 +108,24 @@ export function AppSidebar({ collapsed = false }: AppSidebarProps) {
                 <>
                   <UsersRound className={cn('h-4 w-4 shrink-0 transition-colors', isActive ? 'text-[#0F766E]' : 'text-stone-400 group-hover:text-stone-600')} />
                   {!collapsed && <span className="flex-1">Users</span>}
+                </>
+              )}
+            </NavLink>
+
+            <NavLink to="/roles" className={navClass} title="Roles & Permissions">
+              {({ isActive }) => (
+                <>
+                  <ShieldCheck className={cn('h-4 w-4 shrink-0 transition-colors', isActive ? 'text-[#0F766E]' : 'text-stone-400 group-hover:text-stone-600')} />
+                  {!collapsed && <span className="flex-1">Roles & Permissions</span>}
+                </>
+              )}
+            </NavLink>
+
+            <NavLink to="/activity-logs" className={navClass} title="Activity Logs">
+              {({ isActive }) => (
+                <>
+                  <Activity className={cn('h-4 w-4 shrink-0 transition-colors', isActive ? 'text-[#0F766E]' : 'text-stone-400 group-hover:text-stone-600')} />
+                  {!collapsed && <span className="flex-1">Activity Logs</span>}
                 </>
               )}
             </NavLink>

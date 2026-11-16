@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Building2, PanelLeft, Ticket, UserRound, UsersRound } from 'lucide-react';
+import { Activity, Building2, LayoutDashboard, PanelLeft, ShieldCheck, Ticket, UserRound, UsersRound } from 'lucide-react';
 import { AppSidebar } from '@/components/layout/AppSidebar';
 import { BrandLogo } from '@/components/layout/BrandLogo';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
@@ -8,10 +8,13 @@ import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 
 function getPageLabel(pathname: string): string {
-  if (pathname === '/') return 'Tickets';
+  if (pathname === '/') return 'Dashboard';
+  if (pathname === '/tickets') return 'Tickets';
   if (pathname.startsWith('/tickets/')) return 'Ticket Details';
   if (pathname.startsWith('/departments')) return 'Departments';
   if (pathname.startsWith('/users')) return 'Users';
+  if (pathname.startsWith('/roles')) return 'Roles & Permissions';
+  if (pathname.startsWith('/activity-logs')) return 'Activity Logs';
   if (pathname.startsWith('/profile')) return 'Profile';
   return 'SupportDesk';
 }
@@ -54,7 +57,10 @@ export function AuthenticatedLayout() {
           </Link>
           <nav className="flex items-center gap-1" aria-label="Mobile navigation">
             <NotificationBell />
-            <NavLink to="/" end className={({ isActive }) => cn('rounded-md p-2', isActive ? 'bg-white text-[#0F766E] ring-1 ring-[#E5E2DA]' : 'text-stone-500 hover:bg-[#EFECE6]')} aria-label="Tickets">
+            <NavLink to="/" end className={({ isActive }) => cn('rounded-md p-2', isActive ? 'bg-white text-[#0F766E] ring-1 ring-[#E5E2DA]' : 'text-stone-500 hover:bg-[#EFECE6]')} aria-label="Dashboard">
+              <LayoutDashboard className="h-4 w-4" />
+            </NavLink>
+            <NavLink to="/tickets" className={({ isActive }) => cn('rounded-md p-2', isActive ? 'bg-white text-[#0F766E] ring-1 ring-[#E5E2DA]' : 'text-stone-500 hover:bg-[#EFECE6]')} aria-label="Tickets">
               <Ticket className="h-4 w-4" />
             </NavLink>
             {user?.role === 'admin' && (
@@ -65,6 +71,16 @@ export function AuthenticatedLayout() {
             {user?.role === 'admin' && (
               <NavLink to="/users" className={({ isActive }) => cn('rounded-md p-2', isActive ? 'bg-white text-[#0F766E] ring-1 ring-[#E5E2DA]' : 'text-stone-500 hover:bg-[#EFECE6]')} aria-label="Users">
                 <UsersRound className="h-4 w-4" />
+              </NavLink>
+            )}
+            {user?.role === 'admin' && (
+              <NavLink to="/roles" className={({ isActive }) => cn('rounded-md p-2', isActive ? 'bg-white text-[#0F766E] ring-1 ring-[#E5E2DA]' : 'text-stone-500 hover:bg-[#EFECE6]')} aria-label="Roles & Permissions">
+                <ShieldCheck className="h-4 w-4" />
+              </NavLink>
+            )}
+            {user?.role === 'admin' && (
+              <NavLink to="/activity-logs" className={({ isActive }) => cn('rounded-md p-2', isActive ? 'bg-white text-[#0F766E] ring-1 ring-[#E5E2DA]' : 'text-stone-500 hover:bg-[#EFECE6]')} aria-label="Activity Logs">
+                <Activity className="h-4 w-4" />
               </NavLink>
             )}
             <NavLink to="/profile" className={({ isActive }) => cn('rounded-md p-2', isActive ? 'bg-white text-[#0F766E] ring-1 ring-[#E5E2DA]' : 'text-stone-500 hover:bg-[#EFECE6]')} aria-label="Profile">

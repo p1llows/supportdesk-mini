@@ -392,7 +392,7 @@ export const TicketDetailPage = () => {
       {/* Back breadcrumb */}
       <div>
         <Link
-          to="/"
+          to="/tickets"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-stone-500 transition-colors hover:text-[#0F766E]"
         >
           <ArrowLeft className="h-3.5 w-3.5" />

@@ -3,11 +3,14 @@ import { useAuth } from '@/context/AuthContext';
 import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
 import { DashboardPage } from '@/pages/DashboardPage';
+import { OverviewPage } from '@/pages/OverviewPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { DepartmentsPage } from '@/pages/DepartmentsPage';
 import { TicketDetailPage } from '@/pages/TicketDetailPage';
 import { AuthenticatedLayout } from '@/components/layout/AuthenticatedLayout';
 import { UsersPage } from '@/pages/UsersPage';
+import { RolesPage } from '@/pages/RolesPage';
+import { ActivityLogsPage } from '@/pages/ActivityLogsPage';
 
 // Guest Guard: Allows unauthenticated access, redirects authenticated users to /
 const GuestRoute = ({ children }: { children: React.ReactNode }) => {
@@ -78,10 +81,13 @@ export const AppRouter = () => {
           }
         />
         <Route element={<ProtectedRoute><AuthenticatedLayout /></ProtectedRoute>}>
-          <Route path="/" element={<DashboardPage />} />
+          <Route path="/" element={<OverviewPage />} />
+          <Route path="/tickets" element={<DashboardPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/departments" element={<DepartmentsPage />} />
           <Route path="/users" element={<UsersPage />} />
+          <Route path="/roles" element={<RolesPage />} />
+          <Route path="/activity-logs" element={<ActivityLogsPage />} />
           <Route path="/tickets/:id" element={<TicketDetailPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
