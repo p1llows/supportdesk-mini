@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, UserPlus, Trash2, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
+import { TablePagination } from '@/components/ui/table-pagination';
 import { CreateUserModal } from '@/components/users/CreateUserModal';
 import { EditUserModal } from '@/components/users/EditUserModal';
 
@@ -90,12 +91,17 @@ export function UsersPage() {
   };
 
   const [roleFilter, setRoleFilter] = useState<string>('');
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
 
   const filtered = users.filter((entry) => {
     const matchesQuery = `${entry.name} ${entry.email}`.toLowerCase().includes(query.toLowerCase());
     const matchesRole = !roleFilter || entry.role === roleFilter;
     return matchesQuery && matchesRole;
   });
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const paginatedUsers = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
   const count = (role: string) => users.filter((entry) => entry.role === role).length;
 
   return (
@@ -168,7 +174,7 @@ export function UsersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
-              {filtered.map((entry) => (
+              {paginatedUsers.map((entry) => (
                 <tr key={entry.id} className="transition-colors hover:bg-stone-50/80">
                   <td className="px-5 py-3.5 whitespace-nowrap">
                     <div className="flex items-center gap-3">
@@ -191,7 +197,7 @@ export function UsersPage() {
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => setEditUser(entry)}
-                        className="rounded-md px-2 py-1 text-xs font-semibold text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700"
+                        className="rounded-md px-2 py-1 text-xs font-semibold text-[#0F766E] transition-colors hover:bg-[#0F766E]/10 hover:text-[#115E59]"
                       >
                         Edit
                       </button>
@@ -211,6 +217,14 @@ export function UsersPage() {
             </tbody>
           </table>
         </div>
+
+        <TablePagination
+          page={safePage}
+          pageSize={pageSize}
+          totalItems={filtered.length}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+        />
       </div>
 
       {/* Create User Modal */}

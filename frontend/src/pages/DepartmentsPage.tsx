@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
+import { TablePagination } from '@/components/ui/table-pagination';
 import { PlusCircle, Pencil, Loader2, AlertCircle, Building2, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { DepartmentModal } from '@/components/departments/DepartmentModal';
@@ -41,6 +42,8 @@ export const DepartmentsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<DepartmentData | null>(null);
   const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
@@ -107,6 +110,9 @@ export const DepartmentsPage = () => {
   const filteredDepartments = departments.filter((dept) =>
     `${dept.name} ${dept.description ?? ''}`.toLowerCase().includes(query.toLowerCase())
   );
+  const totalPages = Math.max(1, Math.ceil(filteredDepartments.length / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const paginatedDepartments = filteredDepartments.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   return (
     <div className="space-y-6">
@@ -166,7 +172,7 @@ export const DepartmentsPage = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#EFECE6]">
-              {filteredDepartments.map((dept) => {
+              {paginatedDepartments.map((dept) => {
                 const deptAgents = getAgentsForDepartment(dept.id);
                 return (
                   <tr key={dept.id} className="transition-colors hover:bg-[#FAF9F6]">
@@ -231,6 +237,14 @@ export const DepartmentsPage = () => {
             </tbody>
           </table>
         </div>
+
+        <TablePagination
+          page={safePage}
+          pageSize={pageSize}
+          totalItems={filteredDepartments.length}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+        />
       </div>
 
       <DepartmentModal

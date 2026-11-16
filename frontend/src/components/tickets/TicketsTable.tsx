@@ -2,12 +2,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
+import { TablePagination } from '@/components/ui/table-pagination';
 import {
   ArrowDown,
   ArrowUp,
   ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
   Pencil,
   Ticket,
   Trash2,
@@ -393,57 +392,14 @@ export const TicketsTable: React.FC<TicketsTableProps> = ({
         </table>
       </div>
 
-      {/* Pagination Bar (always visible when tickets exist) */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#E5E2DA] bg-[#FAF9F6] px-5 py-3 text-xs text-stone-500">
-        <div className="flex items-center gap-3">
-          <span className="tabular-nums">
-            Showing {(safePage - 1) * pageSize + 1}–{Math.min(safePage * pageSize, sortedTickets.length)} of{' '}
-            {sortedTickets.length}
-          </span>
-          <label className="inline-flex items-center gap-1.5">
-            <span>Rows</span>
-            <select
-              aria-label="Rows per page"
-              value={pageSize}
-              onChange={(e) => {
-                setPageSize(Number(e.target.value));
-                setPage(1);
-              }}
-              className="dark-select h-7 rounded-md border px-1.5 text-xs font-medium"
-            >
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-            </select>
-          </label>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={safePage <= 1}
-            className="h-7 px-2 text-xs"
-          >
-            <ChevronLeft className="mr-0.5 h-3.5 w-3.5" />
-            Prev
-          </Button>
-          <span className="px-2 font-mono tabular-nums text-stone-700">
-            {safePage} / {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={safePage >= totalPages}
-            className="h-7 px-2 text-xs"
-          >
-            Next
-            <ChevronRight className="ml-0.5 h-3.5 w-3.5" />
-          </Button>
-        </div>
-      </div>
+      {/* Pagination Bar */}
+      <TablePagination
+        page={safePage}
+        pageSize={pageSize}
+        totalItems={sortedTickets.length}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+      />
 
       {/* Delete Ticket Confirmation Dialog */}
       {ticketToDelete && (
