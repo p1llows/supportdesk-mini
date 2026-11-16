@@ -13,20 +13,18 @@ export function BrandMark({ className }: BrandMarkProps) {
       className={cn('h-7 w-7 shrink-0', className)}
       aria-hidden="true"
     >
-      <rect width="32" height="32" rx="8" fill="#0F766E" />
+      {/* Interlocking geometric ribbons forming an abstract "S" desk mark */}
       <path
-        d="M8.5 10.5C8.5 9.39543 9.39543 8.5 10.5 8.5H21.5C22.6046 8.5 23.5 9.39543 23.5 10.5V13.6C22.3954 13.6 21.5 14.4954 21.5 15.6C21.5 16.7046 22.3954 17.6 23.5 17.6V21.5C23.5 22.6046 22.6046 23.5 21.5 23.5H10.5C9.39543 23.5 8.5 22.6046 8.5 21.5V17.6C9.60457 17.6 10.5 16.7046 10.5 15.6C10.5 14.4954 9.60457 13.6 8.5 13.6V10.5Z"
-        fill="white"
-        fillOpacity="0.16"
-        stroke="white"
-        strokeWidth="1.75"
-        strokeLinejoin="round"
+        d="M9 6.5H24.5L20.5 13H12.5L9.5 17.5L5.5 11.5C4.8 10.4 5.6 6.5 9 6.5Z"
+        fill="#0F766E"
       />
       <path
-        d="M13 13.5H19M13 17.5H17"
-        stroke="white"
-        strokeWidth="1.9"
-        strokeLinecap="round"
+        d="M23 25.5H7.5L11.5 19H19.5L22.5 14.5L26.5 20.5C27.2 21.6 26.4 25.5 23 25.5Z"
+        fill="#1C1917"
+      />
+      <path
+        d="M12.5 13H20.5L19.5 19H11.5L12.5 13Z"
+        fill="#14B8A6"
       />
     </svg>
   );
@@ -64,7 +62,7 @@ export function BrandLogo({
           <span
             className={cn(
               'mt-0.5 block text-[10px] font-semibold uppercase tracking-[0.14em]',
-              isDark ? 'text-stone-400' : 'text-teal-700'
+              isDark ? 'text-stone-400' : 'text-[#0F766E]'
             )}
           >
             {subtitle}

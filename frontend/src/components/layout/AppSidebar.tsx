@@ -107,40 +107,51 @@ export function AppSidebar({ collapsed = false }: AppSidebarProps) {
       </nav>
 
       {/* User info + Sign out */}
-      <div className="border-t border-[#E5E2DA] p-2.5">
-        <NavLink
-          to="/profile"
-          title={user?.name}
+      <div className="border-t border-[#E5E2DA] p-3">
+        <div
           className={cn(
-            'mb-1.5 flex items-center rounded-lg p-1.5 transition-colors hover:bg-[#E7E4DC]/70',
-            collapsed ? 'justify-center' : 'gap-2.5'
+            'rounded-xl border border-[#E5E2DA] bg-white p-2 shadow-[0_1px_2px_rgba(28,25,23,0.03)]',
+            collapsed && 'p-1.5'
           )}
         >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0F766E] text-[11px] font-bold text-white">
-            {initials}
-          </div>
-          {!collapsed && (
-            <div className="min-w-0">
-              <p className="truncate text-[13px] font-semibold text-stone-900">{user?.name}</p>
-              <p className="truncate text-[11px] text-stone-500">
-                {user?.role === 'admin' ? 'Administrator' : user?.role === 'agent' ? 'Support Agent' : 'Requester'}
-              </p>
+          <NavLink
+            to="/profile"
+            title={user?.name}
+            className={cn(
+              'flex items-center rounded-lg p-1.5 transition-colors hover:bg-[#F7F6F2]',
+              collapsed ? 'justify-center' : 'gap-2.5'
+            )}
+          >
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0F766E] text-[11px] font-bold text-white">
+              {initials}
             </div>
-          )}
-        </NavLink>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={logout}
-          title="Sign Out"
-          className={cn(
-            'h-8 w-full rounded-lg text-xs font-medium text-stone-500 hover:bg-[#E7E4DC]/70 hover:text-stone-900',
-            collapsed ? 'justify-center px-0' : 'justify-start px-2'
-          )}
-        >
-          <LogOut className={cn('h-3.5 w-3.5', !collapsed && 'mr-2')} />
-          {!collapsed && 'Sign Out'}
-        </Button>
+            {!collapsed && (
+              <div className="min-w-0">
+                <p className="truncate text-[13px] font-semibold text-stone-900">{user?.name}</p>
+                <p className="truncate text-[11px] text-stone-500">
+                  {user?.role === 'admin' ? 'Administrator' : user?.role === 'agent' ? 'Support Agent' : 'Requester'}
+                </p>
+              </div>
+            )}
+          </NavLink>
+
+          <div className="mt-1.5 border-t border-[#EFECE6] pt-1.5">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={logout}
+              title="Sign Out"
+              aria-label="Sign Out"
+              className={cn(
+                'h-8 w-full rounded-lg border border-transparent text-xs font-semibold text-stone-600 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-700',
+                collapsed ? 'justify-center px-0' : 'justify-between px-2.5'
+              )}
+            >
+              {!collapsed && <span>Sign Out</span>}
+              <LogOut className="h-3.5 w-3.5 shrink-0" />
+            </Button>
+          </div>
+        </div>
       </div>
     </Sidebar>
   );
