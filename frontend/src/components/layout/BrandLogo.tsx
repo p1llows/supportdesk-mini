@@ -33,7 +33,7 @@ export function BrandMark({ className }: BrandMarkProps) {
 interface BrandLogoProps {
   theme?: 'dark' | 'light';
   subtitle?: string;
-  size?: 'sm' | 'md';
+  size?: 'sm' | 'md' | 'lg';
   className?: string;
 }
 
@@ -45,14 +45,18 @@ export function BrandLogo({
 }: BrandLogoProps) {
   const isDark = theme === 'dark';
 
+  const markSize = size === 'lg' ? 'h-10 w-10' : size === 'sm' ? 'h-7 w-7' : 'h-8 w-8';
+  const titleSize = size === 'lg' ? 'text-xl' : size === 'sm' ? 'text-sm' : 'text-base';
+  const subtitleSize = size === 'lg' ? 'text-[11px]' : 'text-[10px]';
+
   return (
-    <div className={cn('flex items-center gap-2.5', className)}>
-      <BrandMark className={size === 'sm' ? 'h-6 w-6' : 'h-7 w-7'} />
+    <div className={cn('flex items-center gap-3', className)}>
+      <BrandMark className={markSize} />
       <div className="leading-none">
         <span
           className={cn(
             'block font-bold tracking-[-0.02em]',
-            size === 'sm' ? 'text-sm' : 'text-[15px]',
+            titleSize,
             isDark ? 'text-white' : 'text-stone-900'
           )}
         >
@@ -61,7 +65,8 @@ export function BrandLogo({
         {subtitle && (
           <span
             className={cn(
-              'mt-0.5 block text-[10px] font-semibold uppercase tracking-[0.14em]',
+              'mt-0.5 block font-semibold uppercase tracking-[0.14em]',
+              subtitleSize,
               isDark ? 'text-stone-400' : 'text-[#0F766E]'
             )}
           >

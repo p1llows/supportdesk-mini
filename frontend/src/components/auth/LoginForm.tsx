@@ -95,12 +95,12 @@ export const LoginForm: React.FC = () => {
         )}
       </Button>
 
-      <p className="pt-2 text-center text-xs text-stone-500">
-        Don't have an account?{' '}
+      <div className="border-t border-[#EFECE6] pt-4 text-center text-xs text-stone-500">
+        Don&apos;t have an account?{' '}
         <Link to="/register" className="font-semibold text-[#0F766E] hover:text-[#115E59] hover:underline">
           Create one
         </Link>
-      </p>
+      </div>
     </form>
   );
 };

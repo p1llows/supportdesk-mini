@@ -95,50 +95,53 @@ export const RegisterPage = () => {
           />
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="reg-password">Password</Label>
-          <PasswordInput
-            id="reg-password"
-            placeholder="At least 8 characters"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={loading}
-            required
-            autoComplete="new-password"
-            className="h-10 bg-white border-stone-300 text-stone-800 placeholder:text-stone-400"
-          />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="reg-password">Password</Label>
+            <PasswordInput
+              id="reg-password"
+              placeholder="Min. 8 chars"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
+              required
+              autoComplete="new-password"
+              className="h-10 bg-white border-[#E5E2DA] text-stone-900 placeholder:text-stone-400"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="reg-password-confirm">Confirm password</Label>
+            <PasswordInput
+              id="reg-password-confirm"
+              placeholder="Repeat password"
+              value={passwordConfirmation}
+              onChange={(e) => setPasswordConfirmation(e.target.value)}
+              disabled={loading}
+              required
+              autoComplete="new-password"
+              className="h-10 bg-white border-[#E5E2DA] text-stone-900 placeholder:text-stone-400"
+            />
+          </div>
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="reg-password-confirm">Confirm password</Label>
-          <PasswordInput
-            id="reg-password-confirm"
-            placeholder="Repeat your password"
-            value={passwordConfirmation}
-            onChange={(e) => setPasswordConfirmation(e.target.value)}
-            disabled={loading}
-            required
-            autoComplete="new-password"
-            className="h-10 bg-white border-stone-300 text-stone-800 placeholder:text-stone-400"
-          />
-          {showMatchHint && (
-            <p className="flex items-center gap-1 text-[11px] font-medium text-red-600">
-              <AlertCircle className="h-3 w-3" />
-              Passwords do not match
-            </p>
-          )}
-          {passwordsMatch && (
-            <p className="flex items-center gap-1 text-[11px] font-medium text-emerald-600">
-              <CheckCircle2 className="h-3 w-3" />
-              Passwords match
-            </p>
-          )}
-        </div>
+        {showMatchHint && (
+          <p className="flex items-center gap-1 text-[11px] font-medium text-red-600">
+            <AlertCircle className="h-3 w-3" />
+            Passwords do not match
+          </p>
+        )}
+        {passwordsMatch && (
+          <p className="flex items-center gap-1 text-[11px] font-medium text-emerald-600">
+            <CheckCircle2 className="h-3 w-3" />
+            Passwords match
+          </p>
+        )}
 
         <Button
           type="submit"
           disabled={loading}
-          className="h-10 w-full bg-[#0F766E] text-white hover:bg-[#115E59]"
+          className="h-10 w-full"
         >
           {loading ? (
             <span className="flex items-center gap-2">
@@ -150,16 +153,15 @@ export const RegisterPage = () => {
           )}
         </Button>
 
-        <p className="pt-2 text-center text-xs text-stone-500">
+        <div className="border-t border-[#EFECE6] pt-4 text-center text-xs text-stone-500">
           Already have an account?{' '}
           <Link to="/login" className="font-semibold text-[#0F766E] hover:text-[#115E59] hover:underline">
             Sign in
           </Link>
-        </p>
+        </div>
 
         <p className="text-center text-[11px] leading-relaxed text-stone-400">
-          Registration creates a requester account. After signing up, set your
-          department from your profile to start submitting tickets.
+          Creates a requester account. Set your department in Profile after signing in.
         </p>
       </form>
     </AuthShell>
