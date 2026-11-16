@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/v1/health', [HealthController::class, 'check']);
+Route::get('/v1/users/{user}/avatar', [ProfileController::class, 'showAvatar']);
 
 // Authentication Routes
 Route::post('/v1/auth/register', [AuthController::class, 'register']);
@@ -36,6 +37,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/v1/profile', [ProfileController::class, 'update']);
     Route::patch('/v1/profile/password', [ProfileController::class, 'updatePassword']);
     Route::patch('/v1/profile/department', [ProfileController::class, 'updateDepartment']);
+    Route::post('/v1/profile/avatar', [ProfileController::class, 'uploadAvatar']);
+    Route::delete('/v1/profile/avatar', [ProfileController::class, 'removeAvatar']);
 
     // Notification Routes
     Route::get('/v1/notifications', [NotificationController::class, 'index']);

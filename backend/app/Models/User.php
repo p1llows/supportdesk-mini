@@ -27,6 +27,7 @@ class User extends Authenticatable
         'password',
         'role',
         'department_id',
+        'avatar_path',
     ];
 
     /**
@@ -37,7 +38,27 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'avatar_path',
     ];
+
+    /**
+     * Computed attributes appended to JSON serialization.
+     *
+     * @var list<string>
+     */
+    protected $appends = [
+        'avatar_url',
+    ];
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        if (! $this->avatar_path) {
+            return null;
+        }
+
+        $version = $this->updated_at?->timestamp ?? 0;
+        return url("/api/v1/users/{$this->id}/avatar") . "?v={$version}";
+    }
 
     /**
      * Get the attributes that should be cast.
