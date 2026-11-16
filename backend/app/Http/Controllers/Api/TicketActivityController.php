@@ -26,14 +26,30 @@ class TicketActivityController extends Controller
 
         // 2. Query & return (chronological; id tiebreaker keeps same-second entries stable)
         // Load top-level activities (no parent) with their replies recursively
-        $activities = $ticket->activities()
+        $isRequester = $request->user()->role === 'requester';
+        $query = $ticket->activities()
             ->whereNull('parent_id')
             ->with('user:id,name,role')
-            ->with('replies.user:id,name,role')
-            ->with('replies.replies.user:id,name,role')
+            ->with(['replies' => function ($q) use ($isRequester) {
+                if ($isRequester) {
+                    $q->where('is_internal', false);
+                }
+                $q->with('user:id,name,role')
+                  ->with(['replies' => function ($nested) use ($isRequester) {
+                      if ($isRequester) {
+                          $nested->where('is_internal', false);
+                      }
+                      $nested->with('user:id,name,role');
+                  }]);
+            }])
             ->orderBy('created_at', 'asc')
-            ->orderBy('id', 'asc')
-            ->get();
+            ->orderBy('id', 'asc');
+
+        if ($isRequester) {
+            $query->where('is_internal', false);
+        }
+
+        $activities = $query->get();
 
         return response()->json([
             'status' => 'success',
@@ -72,6 +88,7 @@ class TicketActivityController extends Controller
         // 3. Validation
         $validated = $request->validate([
             'body' => ['required', 'string', 'max:5000'],
+            'is_internal' => ['nullable', 'boolean'],
             'parent_id' => ['nullable', 'exists:ticket_activities,id', function ($attribute, $value, $fail) use ($ticket) {
                 $parent = TicketActivity::find($value);
                 if ($parent && $parent->ticket_id !== $ticket->id) {
@@ -80,24 +97,35 @@ class TicketActivityController extends Controller
             }],
         ]);
 
+        $isInternal = (bool) ($validated['is_internal'] ?? false);
+        if ($isInternal && $request->user()->role === 'requester') {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Requesters cannot create internal notes',
+            ], 403);
+        }
+
         // 4. Create the comment activity
         $activity = TicketActivity::create([
-            'ticket_id' => $ticket->id,
-            'user_id'   => $request->user()->id,
-            'parent_id' => $validated['parent_id'] ?? null,
-            'type'      => 'comment',
-            'body'      => $validated['body'],
+            'ticket_id'   => $ticket->id,
+            'user_id'     => $request->user()->id,
+            'parent_id'   => $validated['parent_id'] ?? null,
+            'type'        => 'comment',
+            'body'        => $validated['body'],
+            'is_internal' => $isInternal,
         ]);
 
-        // Notify related users about the new comment/reply
-        $commentType = ($validated['parent_id'] ?? null) !== null ? 'reply' : 'comment';
-        $excerpt = str($validated['body'])->limit(60);
-        TicketNotificationService::notifyRelatedUsers(
-            $ticket,
-            $commentType,
-            "{$request->user()->name} commented on \"{$ticket->title}\": {$excerpt}",
-            $request->user()->id
-        );
+        // Notify related users about public comments/replies (internal notes do not notify requesters)
+        if (! $isInternal) {
+            $commentType = ($validated['parent_id'] ?? null) !== null ? 'reply' : 'comment';
+            $excerpt = str($validated['body'])->limit(60);
+            TicketNotificationService::notifyRelatedUsers(
+                $ticket,
+                $commentType,
+                "{$request->user()->name} commented on \"{$ticket->title}\": {$excerpt}",
+                $request->user()->id
+            );
+        }
 
         return response()->json([
             'status'  => 'success',
@@ -152,10 +180,11 @@ class TicketActivityController extends Controller
     private function formatActivity(TicketActivity $activity): array
     {
         $formatted = [
-            'id'        => $activity->id,
-            'type'      => $activity->type,
-            'body'      => $activity->body,
-            'metadata'  => $activity->metadata,
+            'id'          => $activity->id,
+            'type'        => $activity->type,
+            'body'        => $activity->body,
+            'is_internal' => (bool) $activity->is_internal,
+            'metadata'    => $activity->metadata,
             'parent_id' => $activity->parent_id,
             'is_edited' => $activity->updated_at->gt($activity->created_at),
             'user'      => $activity->user ? [

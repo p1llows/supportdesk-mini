@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use App\Models\TicketActivity;
 use App\Models\TicketAttachment;
+use App\Models\User;
 use App\Services\TicketNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -33,6 +34,7 @@ class TicketController extends Controller
         $query = Ticket::with([
             'user:id,name,email',
             'department:id,name',
+            'assignee:id,name,email',
         ])->orderBy('created_at', 'desc');
 
         // Requesters can only view their own submitted tickets
@@ -90,6 +92,12 @@ class TicketController extends Controller
                             'name' => $ticket->user->name,
                             'email' => $ticket->user->email,
                         ] : null,
+                        'assigned_to' => $ticket->assigned_to,
+                        'assignee' => $ticket->assignee ? [
+                            'id' => $ticket->assignee->id,
+                            'name' => $ticket->assignee->name,
+                            'email' => $ticket->assignee->email,
+                        ] : null,
                         'created_at' => $ticket->created_at?->toISOString(),
                         'updated_at' => $ticket->updated_at?->toISOString(),
                     ];
@@ -109,7 +117,7 @@ class TicketController extends Controller
         }
 
         // 2. Load & return
-        $ticket->load(['department:id,name', 'user:id,name,email', 'attachments']);
+        $ticket->load(['department:id,name', 'user:id,name,email', 'assignee:id,name,email', 'attachments']);
 
         return response()->json([
             'status' => 'success',
@@ -120,6 +128,7 @@ class TicketController extends Controller
                     'description' => $ticket->description,
                     'priority'    => $ticket->priority,
                     'status'      => $ticket->status,
+                    'assigned_to' => $ticket->assigned_to,
                     'department'  => $ticket->department ? [
                         'id'   => $ticket->department->id,
                         'name' => $ticket->department->name,
@@ -128,6 +137,11 @@ class TicketController extends Controller
                         'id'    => $ticket->user->id,
                         'name'  => $ticket->user->name,
                         'email' => $ticket->user->email,
+                    ] : null,
+                    'assignee' => $ticket->assignee ? [
+                        'id'    => $ticket->assignee->id,
+                        'name'  => $ticket->assignee->name,
+                        'email' => $ticket->assignee->email,
                     ] : null,
                     'attachments' => $ticket->attachments->map(
                         fn (TicketAttachment $attachment) => $this->formatAttachment($attachment)
@@ -384,6 +398,93 @@ class TicketController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Ticket deleted successfully',
+        ]);
+    }
+
+    /**
+     * Assign or unassign a ticket to a support agent (Admin or department Agent).
+     */
+    public function assign(Request $request, Ticket $ticket): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user->role === 'requester') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Requesters cannot assign tickets',
+            ], 403);
+        }
+
+        if ($user->role === 'agent' && $ticket->department_id !== $user->department_id) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You can only assign tickets in your own department',
+            ], 403);
+        }
+
+        if ($ticket->status === 'closed') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Cannot reassign a closed ticket',
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'assigned_to' => ['nullable', 'integer', Rule::exists('users', 'id')],
+        ]);
+
+        $targetId = $validated['assigned_to'] ?? null;
+        $targetUser = $targetId ? User::find($targetId) : null;
+
+        if ($targetUser) {
+            if (! in_array($targetUser->role, ['agent', 'admin'], true)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Tickets can only be assigned to agents or administrators',
+                ], 422);
+            }
+
+            if ($targetUser->role === 'agent' && $targetUser->department_id !== $ticket->department_id) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Selected agent does not belong to this ticket\'s department',
+                ], 422);
+            }
+        }
+
+        $oldAssigneeName = $ticket->assignee?->name;
+        if ($ticket->assigned_to !== $targetId) {
+            $ticket->assigned_to = $targetId;
+            $ticket->save();
+            $ticket->load('assignee:id,name,email');
+
+            TicketActivity::create([
+                'ticket_id' => $ticket->id,
+                'user_id'   => $user->id,
+                'type'      => 'assigned',
+                'metadata'  => [
+                    'old' => $oldAssigneeName,
+                    'new' => $ticket->assignee?->name,
+                ],
+            ]);
+        } else {
+            $ticket->load('assignee:id,name,email');
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Ticket assignment updated',
+            'data' => [
+                'ticket' => [
+                    'id' => $ticket->id,
+                    'assigned_to' => $ticket->assigned_to,
+                    'assignee' => $ticket->assignee ? [
+                        'id' => $ticket->assignee->id,
+                        'name' => $ticket->assignee->name,
+                        'email' => $ticket->assignee->email,
+                    ] : null,
+                ],
+            ],
         ]);
     }
 }

@@ -33,6 +33,7 @@ class Ticket extends Model
     protected $fillable = [
         'user_id',
         'department_id',
+        'assigned_to',
         'title',
         'description',
         'priority',
@@ -57,6 +58,16 @@ class Ticket extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the agent assigned to this ticket.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function assignee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
     }
 
     /**

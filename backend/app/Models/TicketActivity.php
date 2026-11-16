@@ -22,6 +22,7 @@ class TicketActivity extends Model
         'parent_id',
         'type',
         'body',
+        'is_internal',
         'metadata',
     ];
 
@@ -33,6 +34,7 @@ class TicketActivity extends Model
     protected function casts(): array
     {
         return [
+            'is_internal' => 'boolean',
             'metadata' => 'array',
         ];
     }

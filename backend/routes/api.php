@@ -59,8 +59,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/v1/tickets/{ticket}', [TicketController::class, 'update']);
     Route::delete('/v1/tickets/{ticket}', [TicketController::class, 'destroy']);
 
-    // Ticket Status Workflow (Issue #13)
+    // Ticket Status Workflow (Issue #13) & Assignment
     Route::patch('/v1/tickets/{ticket}/status', [TicketStatusController::class, 'update']);
+    Route::patch('/v1/tickets/{ticket}/assign', [TicketController::class, 'assign']);
 
     // Unified Activity Timeline & Comments (Day 5)
     Route::get('/v1/tickets/{ticket}/activities', [TicketActivityController::class, 'index']);
