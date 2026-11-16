@@ -1,13 +1,14 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Pencil, Loader2, AlertCircle, Building2 } from 'lucide-react';
+import { PlusCircle, Pencil, Loader2, AlertCircle, Building2, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { DepartmentModal } from '@/components/departments/DepartmentModal';
 
 interface DepartmentData {
   id: number;
   name: string;
+  description?: string | null;
 }
 
 interface AgentData {
@@ -39,6 +40,7 @@ export const DepartmentsPage = () => {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<DepartmentData | null>(null);
+  const [query, setQuery] = useState('');
 
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
@@ -102,6 +104,10 @@ export const DepartmentsPage = () => {
     );
   }
 
+  const filteredDepartments = departments.filter((dept) =>
+    `${dept.name} ${dept.description ?? ''}`.toLowerCase().includes(query.toLowerCase())
+  );
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -109,7 +115,7 @@ export const DepartmentsPage = () => {
         <div>
           <h1 className="text-2xl font-bold tracking-[-0.02em] text-stone-900">Departments</h1>
           <p className="mt-1 text-sm text-stone-500">
-            {departments.length} departments · Administrator view
+            {departments.length} departments · {agents.length} assigned agent{agents.length !== 1 ? 's' : ''}
           </p>
         </div>
         <Button
@@ -132,62 +138,99 @@ export const DepartmentsPage = () => {
         </div>
       )}
 
-      {/* Department Cards Grid */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {departments.map((dept) => {
-          const deptAgents = getAgentsForDepartment(dept.id);
-          return (
-            <div
-              key={dept.id}
-              className="flex flex-col rounded-xl border border-[#E5E2DA] bg-white p-5 transition-colors hover:border-stone-300"
-            >
-              {/* Card header */}
-              <div className="mb-4 flex items-start justify-between gap-3 border-b border-stone-100 pb-3.5">
-                <div className="flex items-start gap-2.5">
-                  <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-stone-400" />
-                  <div>
-                    <h3 className="text-sm font-bold text-stone-900">{dept.name}</h3>
-                    <p className="mt-0.5 text-xs font-medium tabular-nums text-stone-500">
-                      {deptAgents.length} agent{deptAgents.length !== 1 ? 's' : ''}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    setEditingDepartment(dept);
-                    setIsModalOpen(true);
-                  }}
-                  className="rounded-lg p-1.5 text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-700"
-                  title="Edit department"
-                >
-                  <Pencil className="w-4 h-4" />
-                </button>
-              </div>
+      {/* Unified Departments Directory Card */}
+      <div className="overflow-hidden rounded-xl border border-[#E5E2DA] bg-white">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E5E2DA] bg-[#FAF9F6] px-4 py-3 sm:px-5">
+          <div className="relative w-full max-w-sm">
+            <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-stone-400" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search departments..."
+              className="h-9 w-full rounded-lg border border-[#E5E2DA] bg-white pl-9 pr-3 text-sm text-stone-900 placeholder:text-stone-400 outline-none transition-shadow focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/15"
+            />
+          </div>
+          <span className="text-xs font-medium tabular-nums text-stone-500">
+            {filteredDepartments.length} {filteredDepartments.length === 1 ? 'department' : 'departments'}
+          </span>
+        </div>
 
-              {/* Agents list */}
-              <div className="flex-1 space-y-2.5">
-                {deptAgents.length === 0 ? (
-                  <p className="rounded-lg bg-stone-50 px-3 py-2.5 text-xs text-stone-500 italic">
-                    No agents assigned yet
-                  </p>
-                ) : (
-                  deptAgents.map((agent) => (
-                    <div key={agent.id} className="flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-stone-50">
-                      <Avatar name={agent.name} />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-stone-800">{agent.name}</p>
-                        <p className="truncate text-xs text-stone-500">{agent.email}</p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="border-b border-[#E5E2DA] bg-[#FAF9F6]/60 text-[11px] font-semibold uppercase tracking-wider text-stone-500">
+              <tr>
+                <th className="px-5 py-3">Department</th>
+                <th className="px-4 py-3">Assigned Agents</th>
+                <th className="px-4 py-3">Count</th>
+                <th className="px-5 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#EFECE6]">
+              {filteredDepartments.map((dept) => {
+                const deptAgents = getAgentsForDepartment(dept.id);
+                return (
+                  <tr key={dept.id} className="transition-colors hover:bg-[#FAF9F6]">
+                    <td className="px-5 py-4">
+                      <div className="flex items-start gap-2.5">
+                        <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-stone-400" />
+                        <div className="min-w-0">
+                          <p className="font-semibold text-stone-900">{dept.name}</p>
+                          {dept.description && (
+                            <p className="mt-0.5 line-clamp-1 text-xs text-stone-500">
+                              {dept.description}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <span className="whitespace-nowrap rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-200">
-                        Active
-                      </span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          );
-        })}
+                    </td>
+                    <td className="px-4 py-4">
+                      {deptAgents.length === 0 ? (
+                        <span className="text-xs italic text-stone-400">No agents assigned</span>
+                      ) : (
+                        <div className="flex items-center -space-x-2">
+                          {deptAgents.map((agent) => (
+                            <div
+                              key={agent.id}
+                              tabIndex={0}
+                              aria-label={`${agent.name} (${agent.email})`}
+                              title={`${agent.name} · ${agent.email}`}
+                              className="group/avatar relative rounded-full ring-2 ring-white transition-transform hover:z-10 hover:scale-105 focus-visible:z-10 focus-visible:outline-none"
+                            >
+                              <Avatar name={agent.name} />
+                              <div
+                                role="tooltip"
+                                className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-stone-900 px-2.5 py-1 text-[11px] font-medium text-white opacity-0 shadow-md transition-opacity group-hover/avatar:opacity-100 group-focus-visible/avatar:opacity-100"
+                              >
+                                {agent.name}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-4 font-mono text-xs font-medium tabular-nums text-stone-600 whitespace-nowrap">
+                      {deptAgents.length}
+                    </td>
+                    <td className="px-5 py-4 text-right whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingDepartment(dept);
+                          setIsModalOpen(true);
+                        }}
+                        className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold text-stone-600 transition-colors hover:bg-[#EFECE6] hover:text-stone-900"
+                        title="Edit department"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <DepartmentModal
