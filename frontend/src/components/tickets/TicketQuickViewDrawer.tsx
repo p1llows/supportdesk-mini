@@ -74,8 +74,8 @@ export function TicketQuickViewDrawer({
     <aside
       className={
         mode === 'inline'
-          ? 'flex flex-col overflow-hidden rounded-xl border border-[#E5E2DA] bg-white'
-          : 'flex h-full w-full max-w-lg flex-col border-l border-[#E5E2DA] bg-white shadow-2xl'
+          ? 'animate-sd-in flex flex-col overflow-hidden rounded-xl border border-[#E5E2DA] bg-white'
+          : 'animate-sd-drawer flex h-full w-full max-w-lg flex-col border-l border-[#E5E2DA] bg-white shadow-2xl'
       }
       onClick={(e) => e.stopPropagation()}
       aria-label="Ticket inspector"
@@ -240,7 +240,7 @@ export function TicketQuickViewDrawer({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex justify-end bg-stone-950/30 backdrop-blur-[1px]"
+      className="animate-sd-fade fixed inset-0 z-50 flex justify-end bg-stone-950/30 backdrop-blur-[1px]"
       onClick={onClose}
       role="dialog"
       aria-modal="true"

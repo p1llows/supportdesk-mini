@@ -151,7 +151,11 @@ export function OverviewPage() {
         ].map((kpi) => (
           <div key={kpi.label} className="px-5 py-4">
             <p className="flex items-center gap-2 text-xs font-medium text-stone-500">
-              <span className={`h-2 w-2 rounded-full ${kpi.dot}`} />
+              <span
+                className={`h-2 w-2 rounded-full ${kpi.dot} ${
+                  kpi.label === 'Open Queue' && open > 0 ? 'animate-sd-ping text-[#0F766E]' : ''
+                }`}
+              />
               {kpi.label}
             </p>
             <p className="mt-2 text-2xl font-bold tabular-nums tracking-[-0.02em] text-stone-900">

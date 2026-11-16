@@ -428,7 +428,11 @@ export const DashboardPage = () => {
             }`}
           >
             <span className="flex items-center gap-2 text-xs font-medium text-stone-500">
-              <span className={`h-2 w-2 rounded-full ${metric.dot}`} />
+              <span
+                className={`h-2 w-2 rounded-full ${metric.dot} ${
+                  metric.key === 'open' && metric.value > 0 ? 'animate-sd-ping text-[#0F766E]' : ''
+                }`}
+              />
               {metric.label}
             </span>
             <span className="mt-2 text-2xl font-bold tabular-nums tracking-[-0.02em] text-stone-900">

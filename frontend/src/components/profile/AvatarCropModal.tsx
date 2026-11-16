@@ -133,11 +133,11 @@ export function AvatarCropModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="avatar-crop-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/50 p-4 backdrop-blur-xs"
+      className="animate-sd-fade fixed inset-0 z-50 flex items-center justify-center bg-stone-950/50 p-4 backdrop-blur-xs"
       onClick={() => !saving && onClose()}
     >
       <div
-        className="w-full max-w-sm overflow-hidden rounded-xl border border-[#E5E2DA] bg-white shadow-xl"
+        className="animate-sd-in w-full max-w-sm overflow-hidden rounded-xl border border-[#E5E2DA] bg-white shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

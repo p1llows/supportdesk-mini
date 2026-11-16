@@ -18,6 +18,7 @@
 }
 
 :root {
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --sidebar: #f1efe9;
   --sidebar-foreground: #44403c;
   --sidebar-primary: #0f766e;
@@ -44,6 +45,7 @@ select.dark-select {
   background-color: #ffffff;
   border-color: #e5e2da;
   color: #1c1917;
+  transition: border-color 0.16s var(--ease), box-shadow 0.16s var(--ease);
 }
 select.dark-select:focus {
   border-color: #0f766e;
@@ -53,4 +55,86 @@ select.dark-select:focus {
 select.dark-select option {
   background-color: #ffffff;
   color: #1c1917;
+}
+
+/* Motion keyframes */
+@keyframes sd-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sd-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes sd-auth-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes sd-drawer-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes sd-ping {
+  0% {
+    box-shadow: 0 0 0 0 currentColor;
+    opacity: 1;
+  }
+  70% {
+    box-shadow: 0 0 0 5px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+.animate-sd-fade {
+  animation: sd-fade 0.16s var(--ease) both;
+}
+
+.animate-sd-in {
+  animation: sd-in 0.2s var(--ease) both;
+}
+
+.animate-sd-auth {
+  animation: sd-auth-in 0.45s var(--ease) both;
+}
+
+.animate-sd-drawer {
+  animation: sd-drawer-in 0.22s var(--ease) both;
+}
+
+.animate-sd-ping {
+  animation: sd-ping 1.8s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-sd-fade,
+  .animate-sd-in,
+  .animate-sd-auth,
+  .animate-sd-drawer,
+  .animate-sd-ping {
+    animation: none !important;
+  }
 }

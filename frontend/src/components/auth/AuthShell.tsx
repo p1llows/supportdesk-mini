@@ -13,7 +13,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
         }}
       />
 
-      <main className="relative z-10 w-full max-w-[420px]">
+      <main className="animate-sd-auth relative z-10 w-full max-w-[420px]">
         <div className="mb-6 flex justify-center">
           <BrandLogo theme="light" subtitle="Internal Help Desk" size="lg" />
         </div>

@@ -120,7 +120,7 @@ export function AuthenticatedLayout() {
           </div>
         </header>
 
-        <div className="mx-auto w-full max-w-[1440px] px-4 py-6 md:px-8 md:py-7">
+        <div key={pathname} className="animate-sd-in mx-auto w-full max-w-[1440px] px-4 py-6 md:px-8 md:py-7">
           <Outlet />
         </div>
       </main>
