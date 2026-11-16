@@ -155,23 +155,23 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-lg overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      <div className="bg-white rounded-xl shadow-xl border border-zinc-200 w-full max-w-lg overflow-hidden">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 bg-zinc-50/50">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-700">
+            <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-700">
               <PlusCircle className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-900 text-base">Submit New Support Ticket</h3>
-              <p className="text-xs text-slate-500">Provide details for support assistance</p>
+              <h3 className="font-bold text-zinc-900 text-base">Submit New Support Ticket</h3>
+              <p className="text-xs text-zinc-500">Provide details for support assistance</p>
             </div>
           </div>
           <button
             onClick={onClose}
             disabled={loading}
-            className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors"
+            className="text-zinc-400 hover:text-zinc-600 p-1 rounded-lg hover:bg-zinc-100 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -183,11 +183,11 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
             <div className="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="w-8 h-8" />
             </div>
-            <h4 className="text-lg font-bold text-slate-900">Profile Incomplete</h4>
-            <p className="text-sm text-slate-500 font-medium">
+            <h4 className="text-lg font-bold text-zinc-900">Profile Incomplete</h4>
+            <p className="text-sm text-zinc-500 font-medium">
               A department must be selected first.
             </p>
-            <div className="pt-4 border-t border-slate-100 mt-6">
+            <div className="pt-4 border-t border-zinc-100 mt-6">
               <Button onClick={onClose} variant="outline" className="w-full">
                 Close
               </Button>
@@ -212,7 +212,7 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
 
           {/* Title Input */}
           <div className="space-y-1.5">
-            <Label htmlFor="ticket-title" className="text-xs font-semibold text-slate-700">
+            <Label htmlFor="ticket-title" className="text-xs font-semibold text-zinc-700">
               Ticket Title <span className="text-red-500">*</span>
             </Label>
             <Input
@@ -229,10 +229,10 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
 
           {/* Department Select Dropdown */}
           <div className="space-y-1.5">
-            <Label htmlFor="ticket-department" className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+            <Label htmlFor="ticket-department" className="text-xs font-semibold text-zinc-700 flex items-center justify-between">
               <span>Department <span className="text-red-500">*</span></span>
               {fetchingDepartments && (
-                <span className="text-xs text-slate-400 font-normal flex items-center gap-1">
+                <span className="text-xs text-zinc-400 font-normal flex items-center gap-1">
                   <Loader2 className="w-3 h-3 animate-spin" /> Loading departments...
                 </span>
               )}
@@ -243,7 +243,7 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
               value={departmentId}
               onChange={(e) => setDepartmentId(e.target.value)}
               disabled={loading || fetchingDepartments}
-              className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full h-9 rounded-md border border-zinc-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <option value="" disabled>Select target department...</option>
               {departments.map((dept) => (
@@ -256,7 +256,7 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
 
           {/* Priority Select */}
           <div className="space-y-1.5">
-            <Label htmlFor="ticket-priority" className="text-xs font-semibold text-slate-700">
+            <Label htmlFor="ticket-priority" className="text-xs font-semibold text-zinc-700">
               Priority <span className="text-red-500">*</span>
             </Label>
             <select
@@ -264,7 +264,7 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
               value={priority}
               onChange={(e) => setPriority(e.target.value as 'low' | 'medium' | 'high')}
               disabled={loading}
-              className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full h-9 rounded-md border border-zinc-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <option value="low">Low Priority</option>
               <option value="medium">Medium Priority</option>
@@ -274,7 +274,7 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
 
           {/* Description Textarea */}
           <div className="space-y-1.5">
-            <Label htmlFor="ticket-description" className="text-xs font-semibold text-slate-700">
+            <Label htmlFor="ticket-description" className="text-xs font-semibold text-zinc-700">
               Description <span className="text-red-500">*</span>
             </Label>
             <textarea
@@ -285,13 +285,13 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               disabled={loading}
-              className="w-full rounded-md border border-slate-200 bg-white p-3 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-md border border-zinc-200 bg-white p-3 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
 
           {/* File Attachments */}
           <div className="space-y-1.5">
-            <Label htmlFor="ticket-attachments" className="text-xs font-semibold text-slate-700">
+            <Label htmlFor="ticket-attachments" className="text-xs font-semibold text-zinc-700">
               Attachments (max 3 files, 5 MB each)
             </Label>
             <input
@@ -308,24 +308,24 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
                 (e.target as HTMLInputElement).value = '';
               }}
               disabled={loading}
-              className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+              className="w-full text-sm text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
             />
             {attachments.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-1">
                 {attachments.map((file, idx) => (
                   <span
                     key={`${file.name}-${idx}`}
-                    className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-slate-100 text-xs text-slate-700"
+                    className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-zinc-100 text-xs text-zinc-700"
                   >
-                    <Paperclip className="w-3.5 h-3.5 text-slate-400" />
+                    <Paperclip className="w-3.5 h-3.5 text-zinc-400" />
                     <span className="truncate max-w-[200px]">{file.name}</span>
-                    <span className="text-slate-400">
+                    <span className="text-zinc-400">
                       {(file.size / 1024).toFixed(1)} KB
                     </span>
                     <button
                       type="button"
                       onClick={() => setAttachments(attachments.filter((_, i) => i !== idx))}
-                      className="text-slate-400 hover:text-red-500"
+                      className="text-zinc-400 hover:text-red-500"
                       aria-label="Remove file"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -344,7 +344,7 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
           </div>
 
           {/* Modal Footer */}
-          <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-100">
+          <div className="flex items-center justify-end gap-3 pt-2 border-t border-zinc-100">
             <Button
               type="button"
               variant="outline"
@@ -358,7 +358,7 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
               type="submit"
               size="sm"
               disabled={loading || fetchingDepartments || !departmentId}
-              className="bg-indigo-700 hover:bg-indigo-800 text-white"
+              className="bg-zinc-900 hover:bg-zinc-800 text-white"
             >
               {loading ? (
                 <>

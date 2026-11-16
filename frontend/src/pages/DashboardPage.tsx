@@ -4,16 +4,13 @@ import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { CreateTicketModal } from '@/components/tickets/CreateTicketModal';
 import { EditTicketModal } from '@/components/tickets/EditTicketModal';
+import { TicketQuickViewDrawer, type AssignableAgent } from '@/components/tickets/TicketQuickViewDrawer';
 import { TicketsTable, type TicketData } from '@/components/tickets/TicketsTable';
 import { TicketFilters, type DepartmentOption } from '@/components/tickets/TicketFilters';
 import { Button } from '@/components/ui/button';
 import {
   AlertCircle,
-  CheckCircle2,
-  Clock,
-  Layers,
-  Loader2,
-  PlusCircle,
+  Plus,
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -54,9 +51,10 @@ export const DashboardPage = () => {
   const [ticketsLoading, setTicketsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Modal States
+  // Modal & Drawer States
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingTicket, setEditingTicket] = useState<TicketData | null>(null);
+  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
 
   // Filter States
   const [searchInput, setSearchInput] = useState<string>('');
@@ -65,6 +63,8 @@ export const DashboardPage = () => {
   const [priorityFilter, setPriorityFilter] = useState<string>('');
   const [departmentIdFilter, setDepartmentIdFilter] = useState<string>('');
   const [departments, setDepartments] = useState<DepartmentOption[]>([]);
+  const [agents, setAgents] = useState<AssignableAgent[]>([]);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
@@ -100,6 +100,34 @@ export const DashboardPage = () => {
 
     fetchDepartments();
   }, [token, apiBaseUrl]);
+
+  // Fetch assignable agents/admins for admin and agent roles
+  useEffect(() => {
+    if (!token || user?.role === 'requester') return;
+
+    const fetchAgents = async () => {
+      try {
+        const response = await fetch(`${apiBaseUrl}/v1/users`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
+          },
+        });
+        const result = await response.json();
+        if (response.ok && result.status === 'success') {
+          setAgents(
+            (result.data.users || []).filter(
+              (u: AssignableAgent) => u.role === 'agent' || u.role === 'admin'
+            )
+          );
+        }
+      } catch {
+        // Non-blocking
+      }
+    };
+
+    fetchAgents();
+  }, [token, apiBaseUrl, user?.role]);
 
   const fetchStats = useCallback(async () => {
     if (!token) return;
@@ -183,6 +211,7 @@ export const DashboardPage = () => {
 
   const handleDeleteTicket = async (ticket: TicketData) => {
     if (!token) return;
+    setActionError(null);
 
     try {
       const response = await fetch(`${apiBaseUrl}/v1/tickets/${ticket.id}`, {
@@ -195,15 +224,19 @@ export const DashboardPage = () => {
 
       const result = await response.json();
       if (response.ok && result.status === 'success') {
+        if (selectedTicketId === ticket.id) setSelectedTicketId(null);
         handleRefreshAll();
+      } else {
+        setActionError(result.message || 'Failed to delete ticket.');
       }
-    } catch {
-      // Handled gracefully
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : 'Network error deleting ticket.');
     }
   };
 
   const handleStatusChange = async (ticket: TicketData, newStatus: TicketData['status']) => {
     if (!token) return;
+    setActionError(null);
 
     try {
       const response = await fetch(`${apiBaseUrl}/v1/tickets/${ticket.id}/status`, {
@@ -218,18 +251,50 @@ export const DashboardPage = () => {
 
       const result = await response.json();
       if (response.ok && result.status === 'success') {
-        // Optimistically update the ticket in local state so the button changes immediately,
-        // then do a background refresh to keep stats in sync.
         setTickets((prev) =>
           prev.map((t) =>
             t.id === ticket.id ? { ...t, status: newStatus } : t
           )
         );
-        // Refresh stats & full queue to keep dashboard counts accurate.
         handleRefreshAll();
+      } else {
+        setActionError(result.message || 'Failed to update ticket status.');
       }
-    } catch {
-      // Handled gracefully
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : 'Network error updating status.');
+    }
+  };
+
+  const handleAssignTicket = async (ticket: TicketData, assigneeId: number | null) => {
+    if (!token) return;
+    setActionError(null);
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/v1/tickets/${ticket.id}/assign`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ assigned_to: assigneeId }),
+      });
+
+      const result = await response.json();
+      if (response.ok && result.status === 'success') {
+        const updated = result.data.ticket;
+        setTickets((prev) =>
+          prev.map((t) =>
+            t.id === ticket.id
+              ? { ...t, assigned_to: updated.assigned_to, assignee: updated.assignee }
+              : t
+          )
+        );
+      } else {
+        setActionError(result.message || 'Failed to update ticket assignee.');
+      }
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : 'Network error assigning ticket.');
     }
   };
 
@@ -251,13 +316,15 @@ export const DashboardPage = () => {
       ? 'Department tickets · Agent view'
       : 'Your tickets · Requester view';
 
+  const selectedTicket = tickets.find((t) => t.id === selectedTicketId) ?? null;
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">{pageTitle}</h1>
-          <p className="mt-1 text-sm text-slate-500">{pageSubtitle}</p>
+          <h1 className="text-2xl font-bold tracking-[-0.02em] text-stone-900">{pageTitle}</h1>
+          <p className="mt-1 text-sm text-stone-500">{pageSubtitle}</p>
         </div>
 
         {/* Submit Ticket Action — Restricted strictly to Requesters */}
@@ -279,110 +346,167 @@ export const DashboardPage = () => {
                   setIsModalOpen(true);
                 }
               }}
-              className="bg-indigo-600 text-white shadow-xs hover:bg-indigo-700"
+              className="h-9 px-3.5 text-sm font-semibold"
             >
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Submit New Ticket
+              <Plus className="mr-1.5 h-4 w-4" />
+              New Ticket
             </Button>
           </div>
         )}
       </div>
 
       {/* Error Alert */}
-      {error && (
-        <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
-          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
-          <div className="text-sm">
-            <span className="font-semibold">Dashboard Access Notice:</span> {error}
+      {(error || actionError) && (
+        <div className="flex items-start justify-between gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+            <div className="text-sm">
+              <span className="font-semibold">Notice:</span> {actionError || error}
+            </div>
           </div>
+          {actionError && (
+            <button
+              type="button"
+              onClick={() => setActionError(null)}
+              className="text-xs font-semibold text-red-600 hover:underline"
+            >
+              Dismiss
+            </button>
+          )}
         </div>
       )}
 
-      {/* Stat Metric Cards Grid */}
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Total */}
-        <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all hover:border-slate-300 hover:shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Tickets</p>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
-              <Layers className="h-4 w-4" />
-            </div>
-          </div>
-          <p className="mt-3 text-3xl font-extrabold tabular-nums tracking-tight text-slate-900">
-            {loading ? <span className="animate-pulse text-slate-400">—</span> : stats?.total_tickets ?? 0}
-          </p>
-          <p className="mt-1 text-xs text-slate-500">all recorded requests</p>
-        </div>
-
-        {/* Open */}
-        <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all hover:border-amber-200 hover:shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Open</p>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
-              <Clock className="h-4 w-4" />
-            </div>
-          </div>
-          <p className="mt-3 text-3xl font-extrabold tabular-nums tracking-tight text-amber-600">
-            {loading ? <span className="animate-pulse text-slate-400">—</span> : stats?.open_tickets ?? 0}
-          </p>
-          <p className="mt-1 text-xs text-slate-500">awaiting assignment</p>
-        </div>
-
-        {/* In Progress */}
-        <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all hover:border-blue-200 hover:shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">In Progress</p>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-              <Loader2 className="h-4 w-4" />
-            </div>
-          </div>
-          <p className="mt-3 text-3xl font-extrabold tabular-nums tracking-tight text-blue-600">
-            {loading ? <span className="animate-pulse text-slate-400">—</span> : stats?.in_progress_tickets ?? 0}
-          </p>
-          <p className="mt-1 text-xs text-slate-500">being worked on</p>
-        </div>
-
-        {/* Resolved / Closed */}
-        <div className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all hover:border-emerald-200 hover:shadow-sm">
-          <div className="flex items-center justify-between">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Resolved / Closed</p>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
-              <CheckCircle2 className="h-4 w-4" />
-            </div>
-          </div>
-          <p className="mt-3 text-3xl font-extrabold tabular-nums tracking-tight text-emerald-600">
-            {loading ? <span className="animate-pulse text-slate-400">—</span> : resolvedClosed}
-          </p>
-          <p className="mt-1 text-xs text-slate-500">completed</p>
-        </div>
+      {/* Interactive Metric Strip (click to filter by status) */}
+      <section
+        aria-label="Ticket summary"
+        className="grid grid-cols-2 divide-y divide-[#E5E2DA] overflow-hidden rounded-xl border border-[#E5E2DA] bg-white lg:grid-cols-4 lg:divide-x lg:divide-y-0"
+      >
+        {[
+          {
+            key: '',
+            label: 'All Tickets',
+            value: stats?.total_tickets ?? 0,
+            dot: 'bg-stone-400',
+            sub: 'total requests',
+            active: statusFilter === '',
+            onClick: () => setStatusFilter(''),
+          },
+          {
+            key: 'open',
+            label: 'Open',
+            value: stats?.open_tickets ?? 0,
+            dot: 'bg-amber-500',
+            sub: 'awaiting assignment',
+            active: statusFilter === 'open',
+            onClick: () => setStatusFilter((prev) => (prev === 'open' ? '' : 'open')),
+          },
+          {
+            key: 'in_progress',
+            label: 'In Progress',
+            value: stats?.in_progress_tickets ?? 0,
+            dot: 'bg-blue-600',
+            sub: 'being worked on',
+            active: statusFilter === 'in_progress',
+            onClick: () => setStatusFilter((prev) => (prev === 'in_progress' ? '' : 'in_progress')),
+          },
+          {
+            key: 'resolved',
+            label: 'Resolved / Closed',
+            value: resolvedClosed,
+            dot: 'bg-emerald-600',
+            sub: 'completed',
+            active: statusFilter === 'resolved' || statusFilter === 'closed',
+            onClick: () => setStatusFilter((prev) => (prev === 'resolved' ? '' : 'resolved')),
+          },
+        ].map((metric) => (
+          <button
+            key={metric.label}
+            type="button"
+            onClick={metric.onClick}
+            className={`group relative flex flex-col items-start px-5 py-4 text-left transition-colors hover:bg-[#FAF9F6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0F766E] ${
+              metric.active ? 'bg-[#FAF9F6]' : ''
+            }`}
+          >
+            <span className="flex items-center gap-2 text-xs font-medium text-stone-500">
+              <span className={`h-2 w-2 rounded-full ${metric.dot}`} />
+              {metric.label}
+            </span>
+            <span className="mt-2 text-2xl font-bold tabular-nums tracking-[-0.02em] text-stone-900">
+              {loading ? <span className="animate-pulse text-stone-300">—</span> : metric.value}
+            </span>
+            <span className="mt-0.5 text-[11px] text-stone-400">{metric.sub}</span>
+            {metric.active && (
+              <span className="absolute inset-x-0 bottom-0 h-0.5 bg-[#0F766E]" aria-hidden="true" />
+            )}
+          </button>
+        ))}
       </section>
 
-      {/* Unified Tickets Card: Filters + Table */}
-      <section className="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-xs">
-        <TicketFilters
-          search={searchInput}
-          status={statusFilter}
-          priority={priorityFilter}
-          departmentId={departmentIdFilter}
-          departments={departments}
-          ticketCount={tickets.length}
-          departmentLocked={departmentLocked}
-          lockedDepartmentName={lockedDepartmentName}
-          onSearchChange={setSearchInput}
-          onStatusChange={setStatusFilter}
-          onPriorityChange={setPriorityFilter}
-          onDepartmentIdChange={setDepartmentIdFilter}
-          onClearFilters={handleClearFilters}
-        />
+      {/* Split-Pane Queue + Inspector on xl:, Drawer on smaller screens */}
+      <div className={selectedTicket ? 'grid grid-cols-1 gap-5 xl:grid-cols-12 xl:items-start' : ''}>
+        {/* Unified Tickets Card: Filters + Table */}
+        <section
+          className={`overflow-hidden rounded-xl border border-[#E5E2DA] bg-white ${
+            selectedTicket ? 'xl:col-span-8' : ''
+          }`}
+        >
+          <TicketFilters
+            search={searchInput}
+            status={statusFilter}
+            priority={priorityFilter}
+            departmentId={departmentIdFilter}
+            departments={departments}
+            ticketCount={tickets.length}
+            departmentLocked={departmentLocked}
+            lockedDepartmentName={lockedDepartmentName}
+            onSearchChange={setSearchInput}
+            onStatusChange={setStatusFilter}
+            onPriorityChange={setPriorityFilter}
+            onDepartmentIdChange={setDepartmentIdFilter}
+            onClearFilters={handleClearFilters}
+          />
 
-        <TicketsTable
-          tickets={tickets}
-          loading={ticketsLoading}
-          onEditTicket={(t) => setEditingTicket(t)}
-          onDeleteTicket={handleDeleteTicket}
+          <TicketsTable
+            tickets={tickets}
+            loading={ticketsLoading}
+            selectedTicketId={selectedTicketId}
+            onSelectTicket={(t) => setSelectedTicketId((prev) => (prev === t.id ? null : t.id))}
+            onEditTicket={(t) => setEditingTicket(t)}
+            onDeleteTicket={handleDeleteTicket}
+            onStatusChange={handleStatusChange}
+          />
+        </section>
+
+        {/* Inline Inspector on xl+ screens */}
+        {selectedTicket && (
+          <div className="hidden xl:block xl:col-span-4 xl:sticky xl:top-20">
+            <TicketQuickViewDrawer
+              mode="inline"
+              ticket={selectedTicket}
+              role={user?.role ?? 'requester'}
+              agents={agents}
+              onClose={() => setSelectedTicketId(null)}
+              onEdit={(t) => setEditingTicket(t)}
+              onStatusChange={handleStatusChange}
+              onAssign={handleAssignTicket}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Overlay Drawer on < xl screens */}
+      <div className="xl:hidden">
+        <TicketQuickViewDrawer
+          mode="drawer"
+          ticket={selectedTicket}
+          role={user?.role ?? 'requester'}
+          agents={agents}
+          onClose={() => setSelectedTicketId(null)}
+          onEdit={(t) => setEditingTicket(t)}
           onStatusChange={handleStatusChange}
+          onAssign={handleAssignTicket}
         />
-      </section>
+      </div>
 
       {/* Create Ticket Modal */}
       <CreateTicketModal

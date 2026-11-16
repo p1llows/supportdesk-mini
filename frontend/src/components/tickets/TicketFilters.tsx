@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
 
 export interface DepartmentOption {
@@ -38,21 +38,53 @@ export const TicketFilters: React.FC<TicketFiltersProps> = ({
   onDepartmentIdChange,
   onClearFilters,
 }) => {
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const hasActiveFilters = Boolean(search || status || priority || departmentId);
 
+  // Press '/' anywhere (outside inputs) to focus search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return;
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target?.isContentEditable) {
+        return;
+      }
+      e.preventDefault();
+      searchInputRef.current?.focus();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   return (
-    <div className="flex flex-wrap items-center gap-3 border-b border-slate-200/80 bg-slate-50/70 px-4 py-3.5 sm:px-5">
+    <div className="flex flex-wrap items-center gap-2.5 border-b border-[#E5E2DA] bg-[#FAF9F6] px-4 py-3 sm:px-5">
       {/* Search Input */}
       <div className="relative flex-1 min-w-[210px] max-w-sm">
-        <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+        <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-stone-400" />
         <input
+          ref={searchInputRef}
           id="ticket-search"
           type="text"
           placeholder="Search tickets..."
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="h-9 w-full rounded-lg border border-slate-300/90 bg-white pl-9 pr-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none transition-shadow focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+          className="h-9 w-full rounded-lg border border-[#E5E2DA] bg-white pl-9 pr-8 text-sm text-stone-900 placeholder:text-stone-400 outline-none transition-shadow focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/15"
         />
+        {search ? (
+          <button
+            type="button"
+            onClick={() => onSearchChange('')}
+            aria-label="Clear search"
+            className="absolute right-2.5 top-2.5 text-stone-400 hover:text-stone-700"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        ) : (
+          <kbd className="pointer-events-none absolute right-2.5 top-2 hidden rounded border border-[#E5E2DA] bg-[#F7F6F2] px-1.5 py-0.5 font-mono text-[10px] font-medium text-stone-400 sm:inline-block">
+            /
+          </kbd>
+        )}
       </div>
 
       {/* Status Select */}
@@ -61,7 +93,7 @@ export const TicketFilters: React.FC<TicketFiltersProps> = ({
         aria-label="Filter by status"
         value={status}
         onChange={(e) => onStatusChange(e.target.value)}
-        className="dark-select h-9 rounded-lg border px-3 py-1 text-sm"
+        className="dark-select h-9 rounded-lg border px-3 py-1 text-[13px] font-medium"
       >
         <option value="">All Statuses</option>
         <option value="open">Open</option>
@@ -76,7 +108,7 @@ export const TicketFilters: React.FC<TicketFiltersProps> = ({
         aria-label="Filter by priority"
         value={priority}
         onChange={(e) => onPriorityChange(e.target.value)}
-        className="dark-select h-9 rounded-lg border px-3 py-1 text-sm"
+        className="dark-select h-9 rounded-lg border px-3 py-1 text-[13px] font-medium"
       >
         <option value="">All Priorities</option>
         <option value="low">Low</option>
@@ -92,7 +124,7 @@ export const TicketFilters: React.FC<TicketFiltersProps> = ({
           value={lockedDepartmentName ?? ''}
           disabled
           title="Your tickets are scoped to your department"
-          className="h-9 rounded-lg border border-slate-200 bg-slate-100 px-3 py-1 text-sm text-slate-500 cursor-not-allowed"
+          className="h-9 rounded-lg border border-zinc-200 bg-zinc-100 px-3 py-1 text-[13px] text-zinc-500 cursor-not-allowed"
         >
           <option>{lockedDepartmentName ?? 'No department assigned'}</option>
         </select>
@@ -102,7 +134,7 @@ export const TicketFilters: React.FC<TicketFiltersProps> = ({
           aria-label="Filter by department"
           value={departmentId}
           onChange={(e) => onDepartmentIdChange(e.target.value)}
-          className="dark-select h-9 rounded-lg border px-3 py-1 text-sm"
+          className="dark-select h-9 rounded-lg border px-3 py-1 text-[13px] font-medium"
         >
           <option value="">All Departments</option>
           {departments.map((dept) => (
@@ -117,15 +149,15 @@ export const TicketFilters: React.FC<TicketFiltersProps> = ({
         <button
           type="button"
           onClick={onClearFilters}
-          className="inline-flex h-9 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+          className="inline-flex h-9 items-center gap-1 rounded-lg border border-zinc-200 bg-white px-2.5 text-xs font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
         >
           <X className="h-3.5 w-3.5" />
-          Clear
+          Reset
         </button>
       )}
 
       {/* Ticket count */}
-      <span className="ml-auto inline-flex items-center rounded-full bg-slate-200/70 px-2.5 py-1 text-xs font-semibold tabular-nums text-slate-600">
+      <span className="ml-auto text-xs font-medium tabular-nums text-zinc-500">
         {ticketCount} {ticketCount === 1 ? 'ticket' : 'tickets'}
       </span>
     </div>

@@ -109,25 +109,25 @@ export const EditTicketModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm animate-in fade-in duration-200">
       <div
-        className="w-full max-w-lg bg-white rounded-xl border border-slate-200 shadow-2xl overflow-hidden"
+        className="w-full max-w-lg bg-white rounded-xl border border-zinc-200 shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50">
+        <div className="flex items-center justify-between p-5 border-b border-zinc-100 bg-zinc-50/50">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
               <Edit3 className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900">Edit Ticket #{ticket.id}</h2>
-              <p className="text-xs text-slate-500">Update ticket details and department assignment</p>
+              <h2 className="text-base font-bold text-zinc-900">Edit Ticket #{ticket.id}</h2>
+              <p className="text-xs text-zinc-500">Update ticket details and department assignment</p>
             </div>
           </div>
           <button
             onClick={handleClose}
-            className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-all"
+            className="text-zinc-400 hover:text-zinc-600 p-1.5 rounded-lg hover:bg-zinc-100 transition-all"
             disabled={loading}
           >
             <X className="w-5 h-5" />
@@ -152,7 +152,7 @@ export const EditTicketModal = ({
 
           {/* Title */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-700">Ticket Title</label>
+            <label className="text-xs font-semibold text-zinc-700">Ticket Title</label>
             <Input
               type="text"
               value={title}
@@ -167,10 +167,10 @@ export const EditTicketModal = ({
 
           {/* Description */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-700">Description</label>
+            <label className="text-xs font-semibold text-zinc-700">Description</label>
             <textarea
               rows={3}
-              className="w-full rounded-md border border-slate-200 bg-white p-3 text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              className="w-full rounded-md border border-zinc-200 bg-white p-3 text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               required
@@ -185,11 +185,11 @@ export const EditTicketModal = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Priority Select */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-700">Priority Level</label>
+              <label className="text-xs font-semibold text-zinc-700">Priority Level</label>
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as 'low' | 'medium' | 'high')}
-                className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                className="w-full h-9 rounded-md border border-zinc-200 bg-white px-3 text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
                 disabled={loading}
               >
                 <option value="low">Low Priority</option>
@@ -203,11 +203,11 @@ export const EditTicketModal = ({
 
             {/* Department Select */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-700">Department</label>
+              <label className="text-xs font-semibold text-zinc-700">Department</label>
               <select
                 value={departmentId}
                 onChange={(e) => setDepartmentId(e.target.value)}
-                className="w-full h-9 rounded-md border border-slate-200 bg-white px-3 text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                className="w-full h-9 rounded-md border border-zinc-200 bg-white px-3 text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
                 required
                 disabled={loading}
               >
@@ -225,7 +225,7 @@ export const EditTicketModal = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
+          <div className="flex items-center justify-end gap-2 pt-4 border-t border-zinc-100">
             <Button type="button" variant="outline" size="sm" onClick={handleClose} disabled={loading}>
               Cancel
             </Button>

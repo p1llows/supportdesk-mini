@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, Send } from 'lucide-react';
+import { Loader2, Lock, Send } from 'lucide-react';
 
 interface CommentFormProps {
-  onSubmit: (body: string) => Promise<{ success: boolean; error?: string }>;
+  canPostInternal?: boolean;
+  onSubmit: (body: string, isInternal: boolean) => Promise<{ success: boolean; error?: string }>;
 }
 
-export const CommentForm: React.FC<CommentFormProps> = ({ onSubmit }) => {
+export const CommentForm: React.FC<CommentFormProps> = ({
+  canPostInternal = false,
+  onSubmit,
+}) => {
   const [body, setBody] = useState<string>('');
+  const [isInternal, setIsInternal] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,10 +27,11 @@ export const CommentForm: React.FC<CommentFormProps> = ({ onSubmit }) => {
     setSubmitting(true);
     setError(null);
 
-    const result = await onSubmit(body.trim());
+    const result = await onSubmit(body.trim(), canPostInternal && isInternal);
 
     if (result.success) {
       setBody('');
+      setIsInternal(false);
     } else {
       setError(result.error || 'Failed to add comment.');
     }
@@ -34,10 +40,34 @@ export const CommentForm: React.FC<CommentFormProps> = ({ onSubmit }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-3">
-      <label htmlFor="comment-body" className="text-sm font-semibold text-slate-700">
-        Add a comment
-      </label>
+    <form
+      onSubmit={handleSubmit}
+      className={`rounded-xl border p-4 space-y-3 transition-colors ${
+        isInternal
+          ? 'border-amber-200 bg-amber-50/40'
+          : 'border-[#E5E2DA] bg-white'
+      }`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <label htmlFor="comment-body" className="text-sm font-semibold text-stone-800">
+          {isInternal ? 'Add an internal note' : 'Add a comment'}
+        </label>
+
+        {canPostInternal && (
+          <label className="inline-flex cursor-pointer items-center gap-2 text-xs font-medium text-stone-600 select-none">
+            <input
+              type="checkbox"
+              checked={isInternal}
+              onChange={(e) => setIsInternal(e.target.checked)}
+              disabled={submitting}
+              className="h-3.5 w-3.5 rounded border-stone-300 text-amber-600 focus:ring-amber-500"
+            />
+            <Lock className="h-3 w-3 text-amber-600" />
+            Internal note (hidden from requester)
+          </label>
+        )}
+      </div>
+
       <textarea
         id="comment-body"
         value={body}
@@ -45,8 +75,8 @@ export const CommentForm: React.FC<CommentFormProps> = ({ onSubmit }) => {
         rows={3}
         maxLength={5000}
         disabled={submitting}
-        placeholder="Write your reply..."
-        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent disabled:bg-slate-50 resize-y"
+        placeholder={isInternal ? 'Write an internal note for agents and admins...' : 'Write your reply...'}
+        className="w-full rounded-lg border border-[#E5E2DA] bg-white px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0F766E] focus:border-transparent disabled:bg-stone-50 resize-y"
       />
 
       {error && (
@@ -56,19 +86,19 @@ export const CommentForm: React.FC<CommentFormProps> = ({ onSubmit }) => {
       )}
 
       <div className="flex items-center justify-between">
-        <span className="text-xs text-slate-400">{body.length}/5000</span>
+        <span className="text-xs font-mono text-stone-400">{body.length}/5000</span>
         <Button
           type="submit"
           size="sm"
           disabled={submitting || !body.trim()}
-          className="bg-indigo-700 hover:bg-indigo-800 text-white"
+          className={isInternal ? 'bg-amber-700 hover:bg-amber-800 text-white' : undefined}
         >
           {submitting ? (
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
           ) : (
             <Send className="w-4 h-4 mr-2" />
           )}
-          Add Comment
+          {isInternal ? 'Post Internal Note' : 'Add Comment'}
         </Button>
       </div>
     </form>

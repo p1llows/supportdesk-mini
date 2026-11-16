@@ -8,12 +8,15 @@ import {
   Building2,
   MessageSquare,
   Reply,
+  UserCheck,
+  Lock,
 } from 'lucide-react';
 
 export interface ActivityData {
   id: number;
-  type: 'created' | 'comment' | 'status_change' | 'priority_change' | 'department_change' | string;
+  type: 'created' | 'comment' | 'status_change' | 'priority_change' | 'department_change' | 'assigned' | string;
   body: string | null;
+  is_internal?: boolean;
   metadata: { old?: string; new?: string } | null;
   parent_id: number | null;
   is_edited: boolean;
@@ -49,20 +52,20 @@ export const formatRelative = (isoString: string): string => {
 export const SystemEventLine: React.FC<{ activity: ActivityData }> = ({ activity }) => {
   const name = activity.user?.name ?? 'System';
 
-  let icon = <PlusCircle className="w-3.5 h-3.5 text-slate-400" />;
+  let icon = <PlusCircle className="w-3.5 h-3.5 text-zinc-400" />;
   let description = <span>did something</span>;
 
   switch (activity.type) {
     case 'created':
-      description = <span><strong className="text-slate-700">{name}</strong> created this ticket</span>;
+      description = <span><strong className="text-zinc-700">{name}</strong> created this ticket</span>;
       break;
     case 'status_change':
-      icon = <RefreshCw className="w-3.5 h-3.5 text-indigo-600" />;
+      icon = <RefreshCw className="w-3.5 h-3.5 text-blue-600" />;
       description = (
         <span>
-          <strong className="text-slate-700">{name}</strong> changed status from{' '}
-          <code className="bg-slate-100 px-1 rounded">{activity.metadata?.old}</code> to{' '}
-          <code className="bg-slate-100 px-1 rounded">{activity.metadata?.new}</code>
+          <strong className="text-zinc-700">{name}</strong> changed status from{' '}
+          <code className="bg-zinc-100 px-1 rounded">{activity.metadata?.old}</code> to{' '}
+          <code className="bg-zinc-100 px-1 rounded">{activity.metadata?.new}</code>
         </span>
       );
       break;
@@ -70,29 +73,44 @@ export const SystemEventLine: React.FC<{ activity: ActivityData }> = ({ activity
       icon = <AlertCircle className="w-3.5 h-3.5 text-amber-500" />;
       description = (
         <span>
-          <strong className="text-slate-700">{name}</strong> changed priority from{' '}
-          <code className="bg-slate-100 px-1 rounded">{activity.metadata?.old}</code> to{' '}
-          <code className="bg-slate-100 px-1 rounded">{activity.metadata?.new}</code>
+          <strong className="text-zinc-700">{name}</strong> changed priority from{' '}
+          <code className="bg-zinc-100 px-1 rounded">{activity.metadata?.old}</code> to{' '}
+          <code className="bg-zinc-100 px-1 rounded">{activity.metadata?.new}</code>
         </span>
       );
       break;
     case 'department_change':
-      icon = <Building2 className="w-3.5 h-3.5 text-indigo-600" />;
+      icon = <Building2 className="w-3.5 h-3.5 text-blue-600" />;
       description = (
         <span>
-          <strong className="text-slate-700">{name}</strong> reassigned department from{' '}
-          <code className="bg-slate-100 px-1 rounded">{activity.metadata?.old}</code> to{' '}
-          <code className="bg-slate-100 px-1 rounded">{activity.metadata?.new}</code>
+          <strong className="text-zinc-700">{name}</strong> reassigned department from{' '}
+          <code className="bg-zinc-100 px-1 rounded">{activity.metadata?.old}</code> to{' '}
+          <code className="bg-zinc-100 px-1 rounded">{activity.metadata?.new}</code>
+        </span>
+      );
+      break;
+    case 'assigned':
+      icon = <UserCheck className="w-3.5 h-3.5 text-[#0F766E]" />;
+      description = (
+        <span>
+          <strong className="text-zinc-700">{name}</strong>{' '}
+          {activity.metadata?.new ? (
+            <>
+              assigned ticket to <code className="bg-zinc-100 px-1 rounded">{activity.metadata.new}</code>
+            </>
+          ) : (
+            <>unassigned the ticket</>
+          )}
         </span>
       );
       break;
   }
 
   return (
-    <div className="flex items-center gap-2 py-2 pl-1 text-xs text-slate-500">
+    <div className="flex items-center gap-2 py-2 pl-1 text-xs text-zinc-500">
       {icon}
       <span>{description}</span>
-      <span className="text-slate-400 shrink-0">· {formatRelative(activity.created_at)}</span>
+      <span className="text-zinc-400 shrink-0">· {formatRelative(activity.created_at)}</span>
     </div>
   );
 };
@@ -128,8 +146,8 @@ const ReplyForm: React.FC<{
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg border border-slate-200 shadow-sm p-4 space-y-3 ml-8 mt-2">
-      <label htmlFor={`reply-${parentActivity.id}`} className="text-sm font-semibold text-slate-700">
+    <form onSubmit={handleSubmit} className="bg-white rounded-lg border border-zinc-200 shadow-sm p-4 space-y-3 ml-8 mt-2">
+      <label htmlFor={`reply-${parentActivity.id}`} className="text-sm font-semibold text-zinc-700">
         Reply to {parentActivity.user?.name ?? 'Unknown'}
       </label>
       <textarea
@@ -140,7 +158,7 @@ const ReplyForm: React.FC<{
         maxLength={5000}
         disabled={submitting}
         placeholder="Write your reply..."
-        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent disabled:bg-slate-50 resize-y"
+        className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:bg-zinc-50 resize-y"
       />
 
       {error && (
@@ -150,11 +168,11 @@ const ReplyForm: React.FC<{
       )}
 
       <div className="flex items-center justify-end">
-        <span className="text-xs text-slate-400">{body.length}/5000</span>
+        <span className="text-xs text-zinc-400">{body.length}/5000</span>
         <button
           type="submit"
           disabled={submitting || !body.trim()}
-          className="ml-2 px-3 py-1.5 text-sm font-medium text-white bg-indigo-700 rounded-lg hover:bg-indigo-800 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="ml-2 px-3 py-1.5 text-sm font-medium text-white bg-blue-700 rounded-lg hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {submitting ? 'Replying...' : 'Reply'}
         </button>
@@ -162,7 +180,7 @@ const ReplyForm: React.FC<{
           type="button"
           onClick={onCancel}
           disabled={submitting}
-          className="ml-2 px-3 py-1.5 text-sm font-medium text-slate-600 rounded-lg bg-slate-100 hover:bg-slate-200 disabled:opacity-50"
+          className="ml-2 px-3 py-1.5 text-sm font-medium text-zinc-600 rounded-lg bg-zinc-100 hover:bg-zinc-200 disabled:opacity-50"
         >
           Cancel
         </button>
@@ -188,7 +206,7 @@ const CommentCard: React.FC<{
     }
 
     return (
-      <div className="ml-8 mt-2 space-y-2 border-l-2 border-slate-200 pl-3">
+      <div className="ml-8 mt-2 space-y-2 border-l-2 border-zinc-200 pl-3">
         {activity.replies.map((reply) => (
           <CommentCard
             key={reply.id}
@@ -208,22 +226,34 @@ const CommentCard: React.FC<{
   return (
     <div style={{ marginLeft }} className="space-y-2">
       <div className="py-3">
-        <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-4 space-y-2">
+        <div
+          className={`rounded-lg border p-4 space-y-2 ${
+            activity.is_internal
+              ? 'border-amber-200 bg-amber-50/50'
+              : 'border-[#E5E2DA] bg-white'
+          }`}
+        >
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              <div className="w-7 h-7 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-700 font-bold text-xs shrink-0">
+              <div className="w-7 h-7 rounded-full bg-[#F1EFE9] border border-[#E5E2DA] flex items-center justify-center text-stone-700 font-bold text-xs shrink-0">
                 {activity.user?.name?.charAt(0).toUpperCase() ?? '?'}
               </div>
               <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                <span className="text-sm font-bold text-slate-900 truncate">
+                <span className="text-sm font-bold text-zinc-900 truncate">
                   {activity.user?.name ?? 'Unknown'}
                 </span>
                 {activity.user && <SupportBadge category="role" value={activity.user.role} className="text-[10px] px-1.5 py-0" />}
-                <span className="text-xs text-slate-400">
+                {activity.is_internal && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-100/80 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
+                    <Lock className="h-2.5 w-2.5" />
+                    Internal Note
+                  </span>
+                )}
+                <span className="text-xs text-zinc-400">
                   · {formatRelative(activity.created_at)}
                 </span>
                 {activity.is_edited && (
-                  <span className="text-xs text-slate-400 italic">(edited)</span>
+                  <span className="text-xs text-zinc-400 italic">(edited)</span>
                 )}
               </div>
             </div>
@@ -232,14 +262,14 @@ const CommentCard: React.FC<{
                 <button
                   onClick={() => setShowReplyForm(true)}
                   title="Reply"
-                  className="p-1.5 rounded-md text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors shrink-0"
+                  className="p-1.5 rounded-md text-zinc-400 hover:text-blue-600 hover:bg-blue-50 transition-colors shrink-0"
                 >
                   <Reply className="w-4 h-4" />
                 </button>
               )}
             </div>
           </div>
-          <p className="text-sm text-slate-700 whitespace-pre-wrap break-words pl-9">
+          <p className="text-sm text-zinc-700 whitespace-pre-wrap break-words pl-9">
             {activity.body}
           </p>
           {showReplyForm && (
@@ -274,9 +304,9 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-3">
+      <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-6 space-y-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-10 w-full bg-slate-100 rounded animate-pulse" />
+          <div key={i} className="h-10 w-full bg-zinc-100 rounded animate-pulse" />
         ))}
       </div>
     );
@@ -284,15 +314,15 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
 
   if (activities.length === 0) {
     return (
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 text-center space-y-2">
-        <MessageSquare className="w-6 h-6 text-slate-400 mx-auto" />
-        <p className="text-xs text-slate-500">No activity on this ticket yet.</p>
+      <div className="bg-white rounded-xl border border-zinc-200 shadow-sm p-8 text-center space-y-2">
+        <MessageSquare className="w-6 h-6 text-zinc-400 mx-auto" />
+        <p className="text-xs text-zinc-500">No activity on this ticket yet.</p>
       </div>
     );
   }
 
   return (
-    <div className="pl-3 border-l-2 border-slate-200 ml-2 space-y-0">
+    <div className="pl-3 border-l-2 border-zinc-200 ml-2 space-y-0">
       {activities.map((activity) =>
         activity.type === 'comment' ? (
           <CommentCard
