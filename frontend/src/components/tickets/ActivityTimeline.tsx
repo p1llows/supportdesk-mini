@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { RichTextDisplay, RichTextEditor } from '@/components/ui/rich-text-editor';
 import { SupportBadge } from '@/components/ui/status-badges';
 import {
   PlusCircle,
@@ -7,7 +8,9 @@ import {
   AlertCircle,
   Building2,
   MessageSquare,
+  Pencil,
   Reply,
+  Trash2,
   UserCheck,
   Lock,
 } from 'lucide-react';
@@ -33,6 +36,8 @@ export interface ActivityData {
 interface ActivityTimelineProps {
   activities: ActivityData[];
   loading: boolean;
+  isClosed?: boolean;
+  onEditComment?: (activity: ActivityData, body: string) => Promise<{ success: boolean; error?: string }>;
   onDeleteComment: (activity: ActivityData) => Promise<void>;
   onAddReply: (parentActivity: ActivityData, body: string) => Promise<{ success: boolean; error?: string }>;
 }
@@ -150,15 +155,14 @@ const ReplyForm: React.FC<{
       <label htmlFor={`reply-${parentActivity.id}`} className="text-sm font-semibold text-zinc-700">
         Reply to {parentActivity.user?.name ?? 'Unknown'}
       </label>
-      <textarea
+      <RichTextEditor
         id={`reply-${parentActivity.id}`}
         value={body}
-        onChange={(e) => setBody(e.target.value)}
+        onChange={setBody}
         rows={2}
         maxLength={5000}
         disabled={submitting}
         placeholder="Write your reply..."
-        className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:bg-zinc-50 resize-y"
       />
 
       {error && (
@@ -191,14 +195,44 @@ const ReplyForm: React.FC<{
 
 const CommentCard: React.FC<{
   activity: ActivityData;
+  isClosed?: boolean;
   canDelete: boolean;
+  onEdit?: (activity: ActivityData, body: string) => Promise<{ success: boolean; error?: string }>;
   onDelete: (activity: ActivityData) => Promise<void>;
   onAddReply: (parentActivity: ActivityData, body: string) => Promise<{ success: boolean; error?: string }>;
   depth?: number;
-}> = ({ activity, canDelete, onDelete, onAddReply, depth = 0 }) => {
+}> = ({ activity, isClosed = false, canDelete, onEdit, onDelete, onAddReply, depth = 0 }) => {
   const [showReplyForm, setShowReplyForm] = React.useState(false);
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [editBody, setEditBody] = React.useState(activity.body ?? '');
+  const [savingEdit, setSavingEdit] = React.useState(false);
+  const [editError, setEditError] = React.useState<string | null>(null);
+  const [deleting, setDeleting] = React.useState(false);
   const { user } = useAuth();
-  const canReply = !!user && activity.type === 'comment';
+  const canReply = !!user && !isClosed && activity.type === 'comment';
+  const canEdit =
+    !!user &&
+    !isClosed &&
+    !!onEdit &&
+    activity.type === 'comment' &&
+    (user.role === 'admin' || user.id === activity.user?.id);
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!onEdit || !editBody.replace(/<[^>]+>/g, '').trim()) {
+      setEditError('Comment cannot be empty.');
+      return;
+    }
+    setSavingEdit(true);
+    setEditError(null);
+    const res = await onEdit(activity, editBody);
+    if (res.success) {
+      setIsEditing(false);
+    } else {
+      setEditError(res.error || 'Failed to update comment.');
+    }
+    setSavingEdit(false);
+  };
 
   const renderReplies = () => {
     if (!activity.replies || activity.replies.length === 0) {
@@ -211,7 +245,9 @@ const CommentCard: React.FC<{
           <CommentCard
             key={reply.id}
             activity={reply}
+            isClosed={isClosed}
             canDelete={canDelete}
+            onEdit={onEdit}
             onDelete={onDelete}
             onAddReply={onAddReply}
             depth={depth + 1}
@@ -257,21 +293,85 @@ const CommentCard: React.FC<{
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-1.5 shrink-0">
+            <div className="flex items-center gap-1 shrink-0">
               {canReply && (
                 <button
+                  type="button"
                   onClick={() => setShowReplyForm(true)}
                   title="Reply"
-                  className="p-1.5 rounded-md text-zinc-400 hover:text-blue-600 hover:bg-blue-50 transition-colors shrink-0"
+                  aria-label="Reply to comment"
+                  className="p-1.5 rounded-md text-stone-400 hover:text-[#0F766E] hover:bg-[#F7F6F2] transition-colors shrink-0"
                 >
                   <Reply className="w-4 h-4" />
                 </button>
               )}
+              {canEdit && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditBody(activity.body ?? '');
+                    setEditError(null);
+                    setIsEditing((prev) => !prev);
+                  }}
+                  title="Edit comment"
+                  aria-label="Edit comment"
+                  className="p-1.5 rounded-md text-stone-400 hover:text-stone-900 hover:bg-[#F7F6F2] transition-colors shrink-0"
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+              )}
+              {canDelete && (
+                <button
+                  type="button"
+                  disabled={deleting}
+                  onClick={async () => {
+                    setDeleting(true);
+                    await onDelete(activity);
+                    setDeleting(false);
+                  }}
+                  title="Delete comment"
+                  aria-label="Delete comment"
+                  className="p-1.5 rounded-md text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors shrink-0 disabled:opacity-40"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
           </div>
-          <p className="text-sm text-zinc-700 whitespace-pre-wrap break-words pl-9">
-            {activity.body}
-          </p>
+          <div className="pl-9">
+            {isEditing ? (
+              <form onSubmit={handleSaveEdit} className="space-y-2">
+                <RichTextEditor
+                  value={editBody}
+                  onChange={setEditBody}
+                  rows={2}
+                  disabled={savingEdit}
+                />
+                {editError && (
+                  <p className="text-xs text-red-600">{editError}</p>
+                )}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="submit"
+                    disabled={savingEdit}
+                    className="px-3 py-1 bg-[#0F766E] hover:bg-[#115E59] text-white text-xs font-medium rounded-md disabled:opacity-50"
+                  >
+                    {savingEdit ? 'Saving...' : 'Save'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    disabled={savingEdit}
+                    className="px-3 py-1 text-stone-600 hover:text-stone-900 text-xs font-medium rounded-md hover:bg-stone-100"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <RichTextDisplay content={activity.body ?? ''} />
+            )}
+          </div>
           {showReplyForm && (
             <ReplyForm
               parentActivity={activity}
@@ -296,6 +396,8 @@ const CommentCard: React.FC<{
 export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
   activities,
   loading,
+  isClosed = false,
+  onEditComment,
   onDeleteComment,
   onAddReply,
 }) => {
@@ -328,7 +430,9 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
           <CommentCard
             key={activity.id}
             activity={activity}
+            isClosed={isClosed}
             canDelete={canDeleteComments}
+            onEdit={onEditComment}
             onDelete={onDeleteComment}
             onAddReply={onAddReply}
           />

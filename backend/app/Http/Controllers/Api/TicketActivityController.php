@@ -137,6 +137,54 @@ class TicketActivityController extends Controller
     }
 
     /**
+     * Edit an existing comment (Author or Admin, not on closed tickets).
+     */
+    public function update(Request $request, Ticket $ticket, TicketActivity $activity): JsonResponse
+    {
+        if ($response = $this->authorizeTicketAccess($request, $ticket)) {
+            return $response;
+        }
+
+        if ($activity->ticket_id !== $ticket->id || $activity->type !== 'comment') {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Comment not found',
+            ], 404);
+        }
+
+        $user = $request->user();
+        if ($user->role !== 'admin' && $activity->user_id !== $user->id) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'You are not authorized to edit this comment',
+            ], 403);
+        }
+
+        if ($ticket->status === 'closed') {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Cannot edit comments on a closed ticket',
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'body' => ['required', 'string', 'max:5000'],
+        ]);
+
+        $activity->body = $validated['body'];
+        $activity->save();
+        $activity->load('user:id,name,role');
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Comment updated successfully',
+            'data'    => [
+                'activity' => $this->formatActivity($activity),
+            ],
+        ]);
+    }
+
+    /**
      * Delete a comment (Admin only).
      *
      * Authorization order:

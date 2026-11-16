@@ -4,6 +4,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { RichTextDisplay } from '@/components/ui/rich-text-editor';
 import { SupportBadge } from '@/components/ui/status-badges';
 import { ActivityTimeline, type ActivityData } from '@/components/tickets/ActivityTimeline';
 import { CommentForm } from '@/components/tickets/CommentForm';
@@ -240,6 +241,36 @@ export const TicketDetailPage = () => {
     }
   };
 
+  const handleEditComment = async (
+    activity: ActivityData,
+    body: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const response = await fetch(`${apiBaseUrl}/v1/tickets/${id}/comments/${activity.id}`, {
+        method: 'PATCH',
+        headers: {
+          ...authHeaders(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ body }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.status === 'success') {
+        await refetchActivities();
+        return { success: true };
+      }
+
+      return { success: false, error: result.message || 'Failed to update comment.' };
+    } catch (err: unknown) {
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : 'Network error. Failed to update comment.',
+      };
+    }
+  };
+
   const handleDeleteComment = async (activity: ActivityData): Promise<void> => {
     try {
       const response = await fetch(
@@ -432,9 +463,7 @@ export const TicketDetailPage = () => {
           <Card className="border-[#E5E2DA] shadow-xs">
             <CardContent className="p-6">
               <h2 className="text-xs font-bold uppercase tracking-wider text-stone-500 mb-3">Description</h2>
-              <p className="text-sm leading-relaxed text-stone-700 whitespace-pre-wrap break-words">
-                {ticket?.description}
-              </p>
+              <RichTextDisplay content={ticket?.description ?? ''} />
             </CardContent>
           </Card>
 
@@ -444,6 +473,8 @@ export const TicketDetailPage = () => {
             <ActivityTimeline
               activities={activities}
               loading={activitiesLoading}
+              isClosed={isClosed}
+              onEditComment={handleEditComment}
               onDeleteComment={handleDeleteComment}
               onAddReply={handleAddReply}
             />

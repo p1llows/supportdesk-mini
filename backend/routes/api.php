@@ -66,6 +66,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Unified Activity Timeline & Comments (Day 5)
     Route::get('/v1/tickets/{ticket}/activities', [TicketActivityController::class, 'index']);
     Route::post('/v1/tickets/{ticket}/comments', [TicketActivityController::class, 'store']);
+    Route::patch('/v1/tickets/{ticket}/comments/{activity}', [TicketActivityController::class, 'update']);
     Route::delete('/v1/tickets/{ticket}/comments/{activity}', [TicketActivityController::class, 'destroy']);
 
     // Ticket Attachments
