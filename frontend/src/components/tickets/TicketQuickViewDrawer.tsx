@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, Building2, Calendar, Pencil, UserCheck, UserRound, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { RichTextDisplay } from '@/components/ui/rich-text-editor';
 import { SupportBadge } from '@/components/ui/status-badges';
 import type { TicketData } from '@/components/tickets/TicketsTable';
 
@@ -134,8 +135,8 @@ export function TicketQuickViewDrawer({
           <h3 className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">
             Description
           </h3>
-          <div className="rounded-xl border border-[#E5E2DA] bg-[#FAF9F6] p-3.5 text-sm leading-relaxed text-stone-700 whitespace-pre-wrap break-words">
-            {ticket.description}
+          <div className="rounded-xl border border-[#E5E2DA] bg-[#FAF9F6] p-3.5">
+            <RichTextDisplay content={ticket.description} />
           </div>
         </div>
 

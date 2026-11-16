@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Loader2, Lock, Send } from 'lucide-react';
 
 interface CommentFormProps {
@@ -16,10 +17,12 @@ export const CommentForm: React.FC<CommentFormProps> = ({
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  const plainLength = body.replace(/<[^>]+>/g, '').trim().length;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!body.trim()) {
+    if (!plainLength) {
       setError('Comment cannot be empty.');
       return;
     }
@@ -68,15 +71,14 @@ export const CommentForm: React.FC<CommentFormProps> = ({
         )}
       </div>
 
-      <textarea
+      <RichTextEditor
         id="comment-body"
         value={body}
-        onChange={(e) => setBody(e.target.value)}
+        onChange={setBody}
         rows={3}
         maxLength={5000}
         disabled={submitting}
         placeholder={isInternal ? 'Write an internal note for agents and admins...' : 'Write your reply...'}
-        className="w-full rounded-lg border border-[#E5E2DA] bg-white px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0F766E] focus:border-transparent disabled:bg-stone-50 resize-y"
       />
 
       {error && (
@@ -86,11 +88,11 @@ export const CommentForm: React.FC<CommentFormProps> = ({
       )}
 
       <div className="flex items-center justify-between">
-        <span className="text-xs font-mono text-stone-400">{body.length}/5000</span>
+        <span className="text-xs font-mono text-stone-400">{plainLength}/5000</span>
         <Button
           type="submit"
           size="sm"
-          disabled={submitting || !body.trim()}
+          disabled={submitting || !plainLength}
           className={isInternal ? 'bg-amber-700 hover:bg-amber-800 text-white' : undefined}
         >
           {submitting ? (

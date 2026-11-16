@@ -3,6 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { AlertCircle, Loader2, PlusCircle, X, Paperclip, Trash2 } from 'lucide-react';
 
 interface DepartmentOption {
@@ -272,20 +273,19 @@ export const CreateTicketModal: React.FC<CreateTicketModalProps> = ({
             </select>
           </div>
 
-          {/* Description Textarea */}
+          {/* Description Rich Text Editor */}
           <div className="space-y-1.5">
             <Label htmlFor="ticket-description" className="text-xs font-semibold text-zinc-700">
               Description <span className="text-red-500">*</span>
             </Label>
-            <textarea
+            <RichTextEditor
               id="ticket-description"
               required
               rows={4}
               placeholder="Detailed explanation of the issue..."
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={setDescription}
               disabled={loading}
-              className="w-full rounded-md border border-zinc-200 bg-white p-3 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
 

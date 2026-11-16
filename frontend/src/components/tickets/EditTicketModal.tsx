@@ -2,6 +2,7 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import type { TicketData } from '@/components/tickets/TicketsTable';
 import type { DepartmentOption } from '@/components/tickets/TicketFilters';
 import {
@@ -168,11 +169,10 @@ export const EditTicketModal = ({
           {/* Description */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-zinc-700">Description</label>
-            <textarea
-              rows={3}
-              className="w-full rounded-md border border-zinc-200 bg-white p-3 text-xs shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+            <RichTextEditor
+              rows={4}
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={setDescription}
               required
               disabled={loading}
             />
