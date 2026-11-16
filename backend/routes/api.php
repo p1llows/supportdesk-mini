@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DepartmentController;
@@ -64,6 +65,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/v1/tickets/{ticket}/assign', [TicketController::class, 'assign']);
 
     // Unified Activity Timeline & Comments (Day 5)
+    Route::get('/v1/activity-logs', [ActivityLogController::class, 'index']);
     Route::get('/v1/tickets/{ticket}/activities', [TicketActivityController::class, 'index']);
     Route::post('/v1/tickets/{ticket}/comments', [TicketActivityController::class, 'store']);
     Route::patch('/v1/tickets/{ticket}/comments/{activity}', [TicketActivityController::class, 'update']);
