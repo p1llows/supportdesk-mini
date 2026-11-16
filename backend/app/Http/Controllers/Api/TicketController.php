@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Concerns\ChecksTicketAccess;
 use App\Http\Controllers\Controller;
+use App\Models\RolePermission;
 use App\Models\Ticket;
 use App\Models\TicketActivity;
 use App\Models\TicketAttachment;
@@ -385,8 +386,8 @@ class TicketController extends Controller
     {
         $user = $request->user();
 
-        // Enforce backend authorization: Only administrators can delete tickets
-        if ($user->role !== 'admin') {
+        // Enforce backend authorization via RolePermission
+        if (! RolePermission::allows($user->role, 'delete_tickets')) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Only administrators are authorized to delete tickets',
@@ -408,10 +409,10 @@ class TicketController extends Controller
     {
         $user = $request->user();
 
-        if ($user->role === 'requester') {
+        if (! RolePermission::allows($user->role, 'assign_tickets')) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Requesters cannot assign tickets',
+                'message' => 'You are not authorized to assign tickets',
             ], 403);
         }
 

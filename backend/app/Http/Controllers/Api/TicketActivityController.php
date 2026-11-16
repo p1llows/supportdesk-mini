@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Concerns\ChecksTicketAccess;
 use App\Http\Controllers\Controller;
+use App\Models\RolePermission;
 use App\Models\Ticket;
 use App\Models\TicketActivity;
 use App\Services\TicketNotificationService;
@@ -98,10 +99,10 @@ class TicketActivityController extends Controller
         ]);
 
         $isInternal = (bool) ($validated['is_internal'] ?? false);
-        if ($isInternal && $request->user()->role === 'requester') {
+        if ($isInternal && ! RolePermission::allows($request->user()->role, 'internal_notes')) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'Requesters cannot create internal notes',
+                'message' => 'You are not authorized to create internal notes',
             ], 403);
         }
 
@@ -196,8 +197,8 @@ class TicketActivityController extends Controller
      */
     public function destroy(Request $request, Ticket $ticket, TicketActivity $activity): JsonResponse
     {
-        // 1. Authorization: Admin only
-        if ($request->user()->role !== 'admin') {
+        // 1. Authorization via RolePermission
+        if (! RolePermission::allows($request->user()->role, 'delete_comments')) {
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Only administrators can delete comments',

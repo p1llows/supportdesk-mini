@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\RolePermissionController;
 use App\Http\Controllers\Api\TicketActivityController;
 use App\Http\Controllers\Api\TicketAttachmentController;
 use App\Http\Controllers\Api\TicketController;
@@ -65,6 +66,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/v1/tickets/{ticket}/assign', [TicketController::class, 'assign']);
 
     // Unified Activity Timeline & Comments (Day 5)
+    Route::get('/v1/roles/permissions', [RolePermissionController::class, 'index']);
+    Route::put('/v1/roles/permissions', [RolePermissionController::class, 'update']);
     Route::get('/v1/activity-logs', [ActivityLogController::class, 'index']);
     Route::get('/v1/tickets/{ticket}/activities', [TicketActivityController::class, 'index']);
     Route::post('/v1/tickets/{ticket}/comments', [TicketActivityController::class, 'store']);

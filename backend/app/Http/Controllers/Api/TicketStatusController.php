@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\RolePermission;
 use App\Models\Ticket;
 use App\Models\TicketActivity;
 use App\Services\TicketNotificationService;
@@ -50,8 +51,8 @@ class TicketStatusController extends Controller
             $allowed = true;
         }
 
-        // Forward workflow transitions (Agent or Admin).
-        if (in_array($role, ['agent', 'admin'], true)) {
+        // Forward workflow transitions.
+        if (RolePermission::allows($role, 'transition_tickets')) {
             if ($current === 'open'        && $target === 'in_progress') {
                 $allowed = true;
             }
@@ -60,8 +61,8 @@ class TicketStatusController extends Controller
             }
         }
 
-        // Admin-only transitions.
-        if ($role === 'admin') {
+        // Close / reopen transitions.
+        if (RolePermission::allows($role, 'close_reopen_tickets')) {
             if ($current === 'resolved' && $target === 'closed') {
                 $allowed = true;
             }
