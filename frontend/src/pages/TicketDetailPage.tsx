@@ -502,7 +502,7 @@ export const TicketDetailPage = () => {
               <h2 className="text-xs font-bold uppercase tracking-wider text-stone-500">Details</h2>
 
               {ticket?.requester && (
-                <div className="flex items-start gap-3 rounded-lg border border-[#E5E2DA] bg-stone-50/70 p-3">
+                <div className="flex items-center gap-3 pb-1">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0F766E] text-white">
                     <UserIcon className="h-4 w-4" />
                   </div>

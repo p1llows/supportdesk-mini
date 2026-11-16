@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SupportBadge } from '@/components/ui/status-badges';
@@ -228,51 +228,66 @@ export const ProfilePage = () => {
   const detailsDirty = name.trim() !== user?.name || email.trim() !== user?.email;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="mx-auto max-w-4xl space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-[-0.02em] text-stone-900">Profile</h1>
-        <p className="mt-1 text-sm text-stone-500">Manage your account settings and preferences.</p>
+        <h1 className="text-2xl font-bold tracking-[-0.02em] text-stone-900">Profile & Settings</h1>
+        <p className="mt-1 text-sm text-stone-500">Manage your account details, department, and security.</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Left column: Profile Summary */}
-        <div>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex flex-col items-start gap-4">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#0F766E] text-lg font-bold text-white">
-                  {initials}
-                </div>
-                <div className="min-w-0 w-full">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h2 className="text-lg font-bold text-stone-900">{user?.name}</h2>
-                    <SupportBadge category="role" value={user?.role ?? 'requester'} />
-                  </div>
-                  <p className="mt-1 truncate text-sm text-stone-500">{user?.email}</p>
-                  {memberSince && (
-                    <p className="mt-3 border-t border-stone-100 pt-3 text-xs text-stone-400">
-                      Member since {memberSince}
-                    </p>
-                  )}
-                </div>
+      {/* Top Profile Banner */}
+      <Card>
+        <CardContent className="flex flex-wrap items-center justify-between gap-4 p-6">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#0F766E] text-lg font-bold text-white">
+              {initials}
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h2 className="text-lg font-bold text-stone-900">{user?.name}</h2>
+                <SupportBadge category="role" value={user?.role ?? 'requester'} />
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              <p className="mt-0.5 truncate text-sm text-stone-500">{user?.email}</p>
+            </div>
+          </div>
 
-        {/* Right column: Settings Forms */}
-        <div className="space-y-6 lg:col-span-2">
-          {/* Account Details Card */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <UserRound className="h-4 w-4 text-stone-500" />
-                <CardTitle className="text-base text-stone-900">Account Details</CardTitle>
+          <div className="flex flex-wrap items-center gap-6 text-xs text-stone-500">
+            <div className="border-l border-[#E5E2DA] pl-4">
+              <span className="block text-[10px] font-semibold uppercase tracking-wider text-stone-400">
+                Department
+              </span>
+              <span className="mt-0.5 block font-semibold text-stone-800">
+                {user?.role === 'admin' ? 'All Departments' : currentDepartmentName ?? 'Not assigned'}
+              </span>
+            </div>
+            {memberSince && (
+              <div className="border-l border-[#E5E2DA] pl-4">
+                <span className="block text-[10px] font-semibold uppercase tracking-wider text-stone-400">
+                  Member Since
+                </span>
+                <span className="mt-0.5 block font-semibold text-stone-800">{memberSince}</span>
               </div>
-              <CardDescription>Update your name and email address.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Settings Sections (Left description / Right form card) */}
+      <div className="divide-y divide-[#E5E2DA] border-t border-[#E5E2DA]">
+        {/* Section 1: Account Details */}
+        <section className="grid grid-cols-1 gap-6 py-8 md:grid-cols-3">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <UserRound className="h-4 w-4 text-stone-500" />
+              <h2 className="text-sm font-bold text-stone-900">Account Details</h2>
+            </div>
+            <p className="text-xs leading-relaxed text-stone-500">
+              Update your display name and primary email address used for notifications.
+            </p>
+          </div>
+
+          <Card className="md:col-span-2">
+            <CardContent className="space-y-4 p-6">
               {detailsError && (
                 <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
                   <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
@@ -314,7 +329,7 @@ export const ProfilePage = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end pt-1">
+              <div className="flex justify-end border-t border-[#EFECE6] pt-4">
                 <Button
                   onClick={handleSaveDetails}
                   disabled={savingDetails || !detailsDirty}
@@ -325,23 +340,24 @@ export const ProfilePage = () => {
               </div>
             </CardContent>
           </Card>
+        </section>
 
-          {/* Department Card */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-stone-500" />
-                <CardTitle className="text-base text-stone-900">Department</CardTitle>
-              </div>
-              {user?.role === 'requester' ? (
-                <CardDescription>
-                  Select the department your support requests belong to. Required before submitting tickets.
-                </CardDescription>
-              ) : (
-                <CardDescription>Assigned by administrators.</CardDescription>
-              )}
-            </CardHeader>
-            <CardContent className="space-y-4">
+        {/* Section 2: Department */}
+        <section className="grid grid-cols-1 gap-6 py-8 md:grid-cols-3">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Building2 className="h-4 w-4 text-stone-500" />
+              <h2 className="text-sm font-bold text-stone-900">Department</h2>
+            </div>
+            <p className="text-xs leading-relaxed text-stone-500">
+              {user?.role === 'requester'
+                ? 'Select the department your support requests belong to. Required before submitting tickets.'
+                : 'Department access and routing are managed by administrators.'}
+            </p>
+          </div>
+
+          <Card className="md:col-span-2">
+            <CardContent className="space-y-4 p-6">
               {departmentsLoading ? (
                 <div className="flex items-center gap-2 text-sm text-stone-500">
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -383,7 +399,7 @@ export const ProfilePage = () => {
                     </select>
                   </div>
 
-                  <div className="flex justify-end pt-1">
+                  <div className="flex justify-end border-t border-[#EFECE6] pt-4">
                     <Button
                       onClick={handleSaveDepartment}
                       disabled={
@@ -398,28 +414,31 @@ export const ProfilePage = () => {
                   </div>
                 </>
               ) : (
-                <div className="rounded-lg border border-[#E5E2DA] bg-stone-50 px-3 py-2.5 text-sm">
-                  <span className="text-stone-500">Current department: </span>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-stone-500">Assigned Department</span>
                   <span className="font-semibold text-stone-900">
-                    {currentDepartmentName ?? '—'}
+                    {user?.role === 'admin' ? 'All Departments (Administrator)' : currentDepartmentName ?? '—'}
                   </span>
                 </div>
               )}
             </CardContent>
           </Card>
+        </section>
 
-          {/* Change Password Card */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <KeyRound className="h-4 w-4 text-stone-500" />
-                <CardTitle className="text-base text-stone-900">Change Password</CardTitle>
-              </div>
-              <CardDescription>
-                Choose a strong password of at least 8 characters.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+        {/* Section 3: Change Password */}
+        <section className="grid grid-cols-1 gap-6 py-8 md:grid-cols-3">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <KeyRound className="h-4 w-4 text-stone-500" />
+              <h2 className="text-sm font-bold text-stone-900">Security</h2>
+            </div>
+            <p className="text-xs leading-relaxed text-stone-500">
+              Update your password. Choose a strong password of at least 8 characters.
+            </p>
+          </div>
+
+          <Card className="md:col-span-2">
+            <CardContent className="space-y-4 p-6">
               {passwordError && (
                 <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
                   <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
@@ -477,7 +496,7 @@ export const ProfilePage = () => {
                 </div>
               </div>
 
-              <div className="flex justify-end pt-1">
+              <div className="flex justify-end border-t border-[#EFECE6] pt-4">
                 <Button
                   onClick={handleChangePassword}
                   disabled={savingPassword || !currentPassword || !newPassword || !confirmPassword}
@@ -488,7 +507,7 @@ export const ProfilePage = () => {
               </div>
             </CardContent>
           </Card>
-        </div>
+        </section>
       </div>
     </div>
   );

@@ -110,7 +110,7 @@ export function TicketQuickViewDrawer({
 
         {/* Inline Status Workflow */}
         {canChangeStatus && nextStatuses.length > 0 && (
-          <div className="rounded-xl border border-[#E5E2DA] bg-[#F7F6F2] p-3.5">
+          <div className="border-t border-[#EFECE6] pt-4">
             <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-stone-500">
               Quick Transition
             </p>
@@ -131,29 +131,27 @@ export function TicketQuickViewDrawer({
         )}
 
         {/* Description */}
-        <div className="space-y-2">
+        <div className="space-y-2 border-t border-[#EFECE6] pt-4">
           <h3 className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">
             Description
           </h3>
-          <div className="rounded-xl border border-[#E5E2DA] bg-[#FAF9F6] p-3.5">
-            <RichTextDisplay content={ticket.description} />
-          </div>
+          <RichTextDisplay content={ticket.description} />
         </div>
 
         {/* Properties */}
-        <div className="space-y-2">
+        <div className="space-y-2 border-t border-[#EFECE6] pt-4">
           <h3 className="text-[11px] font-semibold uppercase tracking-wider text-stone-400">
             Properties
           </h3>
-          <dl className="divide-y divide-[#E5E2DA] rounded-xl border border-[#E5E2DA] bg-white text-xs">
-            <div className="flex items-center justify-between px-3.5 py-2.5">
+          <dl className="divide-y divide-[#EFECE6] text-xs">
+            <div className="flex items-center justify-between py-2.5">
               <dt className="flex items-center gap-2 text-stone-500">
                 <Building2 className="h-3.5 w-3.5 text-stone-400" />
                 Department
               </dt>
               <dd className="font-semibold text-stone-900">{ticket.department?.name ?? '—'}</dd>
             </div>
-            <div className="flex items-center justify-between gap-2 px-3.5 py-2.5">
+            <div className="flex items-center justify-between gap-2 py-2.5">
               <dt className="flex items-center gap-2 text-stone-500">
                 <UserCheck className="h-3.5 w-3.5 text-stone-400" />
                 Assignee
@@ -182,7 +180,7 @@ export function TicketQuickViewDrawer({
                 )}
               </dd>
             </div>
-            <div className="flex items-center justify-between px-3.5 py-2.5">
+            <div className="flex items-center justify-between py-2.5">
               <dt className="flex items-center gap-2 text-stone-500">
                 <UserRound className="h-3.5 w-3.5 text-stone-400" />
                 Requester
@@ -194,7 +192,7 @@ export function TicketQuickViewDrawer({
                 )}
               </dd>
             </div>
-            <div className="flex items-center justify-between px-3.5 py-2.5">
+            <div className="flex items-center justify-between py-2.5">
               <dt className="flex items-center gap-2 text-stone-500">
                 <Calendar className="h-3.5 w-3.5 text-stone-400" />
                 Last Updated
