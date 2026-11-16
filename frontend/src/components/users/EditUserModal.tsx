@@ -134,25 +134,25 @@ export const EditUserModal = ({ isOpen, user: editUser, onClose, onSuccess }: Ed
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/70 backdrop-blur-sm animate-in fade-in duration-200">
       <div
-        className="w-full max-w-md bg-white rounded-xl border border-slate-200 shadow-2xl overflow-hidden"
+        className="w-full max-w-md bg-white rounded-xl border border-zinc-200 shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-slate-200">
+        <div className="flex items-center justify-between p-5 border-b border-zinc-200">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+            <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
               <Edit3 className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900">Edit User</h2>
-              <p className="text-xs text-slate-500">Update user details</p>
+              <h2 className="text-base font-bold text-zinc-900">Edit User</h2>
+              <p className="text-xs text-zinc-500">Update user details</p>
             </div>
           </div>
           <button
             onClick={handleClose}
-            className="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition-all"
+            className="text-zinc-400 hover:text-zinc-700 p-1.5 rounded-lg hover:bg-zinc-100 transition-all"
             disabled={loading}
           >
             <X className="w-5 h-5" />
@@ -179,35 +179,35 @@ export const EditUserModal = ({ isOpen, user: editUser, onClose, onSuccess }: Ed
 
           {/* Name */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-600">Full Name</label>
+            <label className="text-xs font-semibold text-zinc-600">Full Name</label>
             <Input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
               disabled={loading}
-              className="bg-white border-slate-300 text-slate-800 placeholder:text-slate-400"
+              className="bg-white border-zinc-300 text-zinc-800 placeholder:text-zinc-400"
             />
             {fieldErrors.name && <p className="text-xs text-red-600 font-medium">{fieldErrors.name[0]}</p>}
           </div>
 
           {/* Email */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-600">Email Address</label>
+            <label className="text-xs font-semibold text-zinc-600">Email Address</label>
             <Input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={loading}
-              className="bg-white border-slate-300 text-slate-800 placeholder:text-slate-400"
+              className="bg-white border-zinc-300 text-zinc-800 placeholder:text-zinc-400"
             />
             {fieldErrors.email && <p className="text-xs text-red-600 font-medium">{fieldErrors.email[0]}</p>}
           </div>
 
           {/* Role */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-600">Role</label>
+            <label className="text-xs font-semibold text-zinc-600">Role</label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as 'admin' | 'agent' | 'requester')}
@@ -224,7 +224,7 @@ export const EditUserModal = ({ isOpen, user: editUser, onClose, onSuccess }: Ed
           {/* Department (for agents) */}
           {role === 'agent' && (
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-600">Department</label>
+              <label className="text-xs font-semibold text-zinc-600">Department</label>
               <select
                 value={departmentId}
                 onChange={(e) => setDepartmentId(e.target.value)}
@@ -241,11 +241,11 @@ export const EditUserModal = ({ isOpen, user: editUser, onClose, onSuccess }: Ed
           )}
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-200">
-            <Button type="button" variant="ghost" size="sm" onClick={handleClose} disabled={loading} className="text-slate-500 hover:text-slate-800 hover:bg-slate-100">
+          <div className="flex items-center justify-end gap-2 pt-4 border-t border-zinc-200">
+            <Button type="button" variant="ghost" size="sm" onClick={handleClose} disabled={loading} className="text-zinc-500 hover:text-zinc-800 hover:bg-zinc-100">
               Cancel
             </Button>
-            <Button type="submit" size="sm" disabled={loading} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+            <Button type="submit" size="sm" disabled={loading} className="bg-zinc-900 hover:bg-zinc-800 text-white">
               {loading ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>

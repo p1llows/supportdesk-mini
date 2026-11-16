@@ -50,8 +50,8 @@ export const RegisterPage = () => {
   return (
     <AuthShell>
       <header className="space-y-2 text-center sm:text-left">
-        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">Create your account</h1>
-        <p className="text-sm text-slate-500">
+        <h1 className="text-2xl font-extrabold tracking-tight text-stone-900">Create your account</h1>
+        <p className="text-sm text-stone-500">
           Register to submit and track support requests.
         </p>
       </header>
@@ -76,7 +76,7 @@ export const RegisterPage = () => {
             required
             autoFocus
             autoComplete="name"
-            className="h-10 bg-white border-slate-300 text-slate-800 placeholder:text-slate-400"
+            className="h-10 bg-white border-stone-300 text-stone-800 placeholder:text-stone-400"
           />
         </div>
 
@@ -91,7 +91,7 @@ export const RegisterPage = () => {
             disabled={loading}
             required
             autoComplete="email"
-            className="h-10 bg-white border-slate-300 text-slate-800 placeholder:text-slate-400"
+            className="h-10 bg-white border-stone-300 text-stone-800 placeholder:text-stone-400"
           />
         </div>
 
@@ -105,7 +105,7 @@ export const RegisterPage = () => {
             disabled={loading}
             required
             autoComplete="new-password"
-            className="h-10 bg-white border-slate-300 text-slate-800 placeholder:text-slate-400"
+            className="h-10 bg-white border-stone-300 text-stone-800 placeholder:text-stone-400"
           />
         </div>
 
@@ -119,7 +119,7 @@ export const RegisterPage = () => {
             disabled={loading}
             required
             autoComplete="new-password"
-            className="h-10 bg-white border-slate-300 text-slate-800 placeholder:text-slate-400"
+            className="h-10 bg-white border-stone-300 text-stone-800 placeholder:text-stone-400"
           />
           {showMatchHint && (
             <p className="flex items-center gap-1 text-[11px] font-medium text-red-600">
@@ -138,7 +138,7 @@ export const RegisterPage = () => {
         <Button
           type="submit"
           disabled={loading}
-          className="h-10 w-full bg-indigo-600 text-white hover:bg-indigo-700"
+          className="h-10 w-full bg-[#0F766E] text-white hover:bg-[#115E59]"
         >
           {loading ? (
             <span className="flex items-center gap-2">
@@ -150,14 +150,14 @@ export const RegisterPage = () => {
           )}
         </Button>
 
-        <p className="pt-2 text-center text-xs text-slate-500">
+        <p className="pt-2 text-center text-xs text-stone-500">
           Already have an account?{' '}
-          <Link to="/login" className="font-semibold text-indigo-600 hover:text-indigo-700 hover:underline">
+          <Link to="/login" className="font-semibold text-[#0F766E] hover:text-[#115E59] hover:underline">
             Sign in
           </Link>
         </p>
 
-        <p className="text-center text-[11px] leading-relaxed text-slate-400">
+        <p className="text-center text-[11px] leading-relaxed text-stone-400">
           Registration creates a requester account. After signing up, set your
           department from your profile to start submitting tickets.
         </p>

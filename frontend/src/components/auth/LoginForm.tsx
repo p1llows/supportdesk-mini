@@ -57,7 +57,7 @@ export const LoginForm: React.FC = () => {
           required
           autoFocus
           autoComplete="email"
-          className="h-10 bg-white border-slate-300 text-slate-800 placeholder:text-slate-400"
+          className="h-10 bg-white border-stone-300 text-stone-800 placeholder:text-stone-400"
         />
       </div>
 
@@ -73,14 +73,14 @@ export const LoginForm: React.FC = () => {
           disabled={loading}
           required
           autoComplete="current-password"
-          className="h-10 bg-white border-slate-300 text-slate-800 placeholder:text-slate-400"
+          className="h-10 bg-white border-stone-300 text-stone-800 placeholder:text-stone-400"
         />
       </div>
 
       <Button
         type="submit"
         disabled={loading}
-        className="h-10 w-full bg-indigo-600 text-white hover:bg-indigo-700"
+        className="h-10 w-full bg-[#0F766E] text-white hover:bg-[#115E59]"
       >
         {loading ? (
           <span className="flex items-center gap-2">
@@ -95,9 +95,9 @@ export const LoginForm: React.FC = () => {
         )}
       </Button>
 
-      <p className="pt-2 text-center text-xs text-slate-500">
+      <p className="pt-2 text-center text-xs text-stone-500">
         Don't have an account?{' '}
-        <Link to="/register" className="font-semibold text-indigo-600 hover:text-indigo-700 hover:underline">
+        <Link to="/register" className="font-semibold text-[#0F766E] hover:text-[#115E59] hover:underline">
           Create one
         </Link>
       </p>

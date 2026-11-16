@@ -5,8 +5,8 @@ export const LoginPage = () => {
   return (
     <AuthShell>
       <header className="space-y-2 text-center sm:text-left">
-        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">Welcome back</h1>
-        <p className="text-sm text-slate-500">
+        <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900">Welcome back</h1>
+        <p className="text-sm text-zinc-500">
           Sign in to your SupportDesk account to continue.
         </p>
       </header>

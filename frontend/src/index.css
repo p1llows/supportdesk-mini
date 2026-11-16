@@ -1,38 +1,31 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
 
 @layer base {
   body {
-    background-color: #f6f8fb;
-    color: #0f172a;
+    background-color: #f7f6f2;
+    color: #1c1917;
     font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  }
 }
 
 :root {
-  --sidebar: hsl(0 0% 98%);
-  --sidebar-foreground: hsl(240 5.3% 26.1%);
-  --sidebar-primary: hsl(240 5.9% 10%);
-  --sidebar-primary-foreground: hsl(0 0% 98%);
-  --sidebar-accent: hsl(240 4.8% 95.9%);
-  --sidebar-accent-foreground: hsl(240 5.9% 10%);
-  --sidebar-border: hsl(220 13% 91%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
-}
-
-.dark {
-  --sidebar: hsl(240 5.9% 10%);
-  --sidebar-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-primary: hsl(224.3 76.3% 48%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(240 3.7% 15.9%);
-  --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-border: hsl(240 3.7% 15.9%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
+  --sidebar: #f1efe9;
+  --sidebar-foreground: #44403c;
+  --sidebar-primary: #0f766e;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e7e5de;
+  --sidebar-accent-foreground: #1c1917;
+  --sidebar-border: #e5e2da;
+  --sidebar-ring: #0f766e;
 }
 
 @theme inline {
@@ -49,15 +42,15 @@
 /* Select styling */
 select.dark-select {
   background-color: #ffffff;
-  border-color: #cbd5e1;
-  color: #334155;
+  border-color: #e5e2da;
+  color: #1c1917;
 }
 select.dark-select:focus {
-  border-color: #4f6cf7;
+  border-color: #0f766e;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(79, 108, 247, 0.3);
+  box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.16);
 }
 select.dark-select option {
   background-color: #ffffff;
-  color: #334155;
+  color: #1c1917;
 }

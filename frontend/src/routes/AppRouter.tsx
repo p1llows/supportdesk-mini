@@ -15,9 +15,9 @@ const GuestRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="flex items-center gap-3 text-slate-500 text-sm animate-pulse">
-          <span className="w-5 h-5 border-2 border-slate-600 border-t-transparent rounded-full animate-spin" />
+      <main className="min-h-screen bg-zinc-50 flex items-center justify-center">
+        <div className="flex items-center gap-3 text-zinc-500 text-sm animate-pulse">
+          <span className="w-5 h-5 border-2 border-zinc-600 border-t-transparent rounded-full animate-spin" />
           Verifying session...
         </div>
       </main>
@@ -29,7 +29,7 @@ const GuestRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-zinc-50">
       {children}
     </main>
   );
@@ -41,9 +41,9 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="flex items-center gap-3 text-slate-500 text-sm animate-pulse">
-          <span className="w-5 h-5 border-2 border-slate-600 border-t-transparent rounded-full animate-spin" />
+      <main className="min-h-screen bg-zinc-50 flex items-center justify-center">
+        <div className="flex items-center gap-3 text-zinc-500 text-sm animate-pulse">
+          <span className="w-5 h-5 border-2 border-zinc-600 border-t-transparent rounded-full animate-spin" />
           Loading application...
         </div>
       </main>

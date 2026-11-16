@@ -1,87 +1,104 @@
 import { NavLink } from 'react-router-dom';
-import { Building2, LogOut, Ticket, UserRound, UsersRound, ChevronRight } from 'lucide-react';
+import { Building2, LogOut, Ticket, UserRound, UsersRound } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { BrandLogo } from '@/components/layout/BrandLogo';
+import { BrandLogo, BrandMark } from '@/components/layout/BrandLogo';
 import { Sidebar } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-const navClass = ({ isActive }: { isActive: boolean }) =>
-  cn(
-    'group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-150',
-    isActive
-      ? 'bg-indigo-500/15 text-white shadow-xs ring-1 ring-indigo-500/30'
-      : 'text-slate-400 hover:bg-white/5 hover:text-slate-100'
-  );
+interface AppSidebarProps {
+  collapsed?: boolean;
+}
 
-export function AppSidebar() {
+export function AppSidebar({ collapsed = false }: AppSidebarProps) {
   const { user, logout } = useAuth();
 
-  const initials = user?.name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase() ?? '';
+  const initials =
+    user?.name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase() ?? '';
+
+  const navClass = ({ isActive }: { isActive: boolean }) =>
+    cn(
+      'group flex items-center rounded-lg text-[13px] font-semibold transition-all duration-150',
+      collapsed ? 'justify-center px-2 py-2.5' : 'gap-2.5 px-3 py-2',
+      isActive
+        ? 'bg-white text-stone-900 shadow-[0_1px_2px_rgba(28,25,23,0.05)] ring-1 ring-[#E5E2DA]'
+        : 'text-stone-600 hover:bg-[#E7E4DC]/70 hover:text-stone-900'
+    );
 
   return (
-    <Sidebar className="relative overflow-hidden border-slate-800/80 bg-slate-950">
-      {/* Subtle ambient glow */}
-      <div className="pointer-events-none absolute -top-20 -left-16 h-56 w-56 rounded-full bg-indigo-600/15 blur-3xl" />
-
+    <Sidebar
+      className={cn(
+        'border-[#E5E2DA] bg-[#F1EFE9] transition-[width] duration-200',
+        collapsed ? 'w-[68px]' : 'w-[240px]'
+      )}
+    >
       {/* Branding */}
-      <div className="relative z-10 border-b border-white/10 px-5 py-5">
-        <BrandLogo theme="dark" subtitle="Mini Portal" />
+      <div
+        className={cn(
+          'flex h-14 items-center border-b border-[#E5E2DA]',
+          collapsed ? 'justify-center px-2' : 'px-4'
+        )}
+      >
+        {collapsed ? (
+          <BrandMark className="h-7 w-7" />
+        ) : (
+          <BrandLogo theme="light" subtitle="Help Desk" size="sm" />
+        )}
       </div>
 
       {/* Navigation */}
-      <nav className="relative z-10 flex-1 space-y-5 px-3 py-4" aria-label="Primary navigation">
-        <div className="space-y-1">
-          <p className="px-3 pb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
-            Workspace
-          </p>
-          <NavLink to="/" end className={navClass}>
+      <nav className="flex-1 space-y-5 px-2.5 py-4" aria-label="Primary navigation">
+        <div className="space-y-0.5">
+          {!collapsed && (
+            <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-stone-400">
+              Workspace
+            </p>
+          )}
+          <NavLink to="/" end className={navClass} title="Tickets">
             {({ isActive }) => (
               <>
-                <Ticket className={cn('h-4 w-4 transition-colors', isActive ? 'text-indigo-400' : 'text-slate-500 group-hover:text-slate-300')} />
-                <span className="flex-1">Tickets</span>
-                {isActive && <ChevronRight className="h-3.5 w-3.5 text-indigo-400" />}
+                <Ticket className={cn('h-4 w-4 shrink-0 transition-colors', isActive ? 'text-[#0F766E]' : 'text-stone-400 group-hover:text-stone-600')} />
+                {!collapsed && <span className="flex-1">Tickets</span>}
               </>
             )}
           </NavLink>
 
-          <NavLink to="/profile" className={navClass}>
+          <NavLink to="/profile" className={navClass} title="Profile">
             {({ isActive }) => (
               <>
-                <UserRound className={cn('h-4 w-4 transition-colors', isActive ? 'text-indigo-400' : 'text-slate-500 group-hover:text-slate-300')} />
-                <span className="flex-1">Profile</span>
-                {isActive && <ChevronRight className="h-3.5 w-3.5 text-indigo-400" />}
+                <UserRound className={cn('h-4 w-4 shrink-0 transition-colors', isActive ? 'text-[#0F766E]' : 'text-stone-400 group-hover:text-stone-600')} />
+                {!collapsed && <span className="flex-1">Profile</span>}
               </>
             )}
           </NavLink>
         </div>
 
         {user?.role === 'admin' && (
-          <div className="space-y-1">
-            <p className="px-3 pb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
-              Administration
-            </p>
-            <NavLink to="/departments" className={navClass}>
+          <div className="space-y-0.5">
+            {!collapsed && (
+              <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-stone-400">
+                Administration
+              </p>
+            )}
+            <NavLink to="/departments" className={navClass} title="Departments">
               {({ isActive }) => (
                 <>
-                  <Building2 className={cn('h-4 w-4 transition-colors', isActive ? 'text-indigo-400' : 'text-slate-500 group-hover:text-slate-300')} />
-                  <span className="flex-1">Departments</span>
-                  {isActive && <ChevronRight className="h-3.5 w-3.5 text-indigo-400" />}
+                  <Building2 className={cn('h-4 w-4 shrink-0 transition-colors', isActive ? 'text-[#0F766E]' : 'text-stone-400 group-hover:text-stone-600')} />
+                  {!collapsed && <span className="flex-1">Departments</span>}
                 </>
               )}
             </NavLink>
 
-            <NavLink to="/users" className={navClass}>
+            <NavLink to="/users" className={navClass} title="Users">
               {({ isActive }) => (
                 <>
-                  <UsersRound className={cn('h-4 w-4 transition-colors', isActive ? 'text-indigo-400' : 'text-slate-500 group-hover:text-slate-300')} />
-                  <span className="flex-1">Users</span>
-                  {isActive && <ChevronRight className="h-3.5 w-3.5 text-indigo-400" />}
+                  <UsersRound className={cn('h-4 w-4 shrink-0 transition-colors', isActive ? 'text-[#0F766E]' : 'text-stone-400 group-hover:text-stone-600')} />
+                  {!collapsed && <span className="flex-1">Users</span>}
                 </>
               )}
             </NavLink>
@@ -90,29 +107,39 @@ export function AppSidebar() {
       </nav>
 
       {/* User info + Sign out */}
-      <div className="relative z-10 border-t border-white/10 bg-slate-900/50 p-3.5">
+      <div className="border-t border-[#E5E2DA] p-2.5">
         <NavLink
           to="/profile"
-          className="mb-2.5 flex items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-white/5"
+          title={user?.name}
+          className={cn(
+            'mb-1.5 flex items-center rounded-lg p-1.5 transition-colors hover:bg-[#E7E4DC]/70',
+            collapsed ? 'justify-center' : 'gap-2.5'
+          )}
         >
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-indigo-700 text-xs font-bold text-white ring-2 ring-indigo-400/20">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0F766E] text-[11px] font-bold text-white">
             {initials}
           </div>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-bold text-white">{user?.name}</p>
-            <p className="truncate text-xs text-slate-400">
-              {user?.role === 'admin' ? 'Administrator' : user?.role === 'agent' ? 'Support Agent' : 'Requester'}
-            </p>
-          </div>
+          {!collapsed && (
+            <div className="min-w-0">
+              <p className="truncate text-[13px] font-semibold text-stone-900">{user?.name}</p>
+              <p className="truncate text-[11px] text-stone-500">
+                {user?.role === 'admin' ? 'Administrator' : user?.role === 'agent' ? 'Support Agent' : 'Requester'}
+              </p>
+            </div>
+          )}
         </NavLink>
         <Button
           variant="ghost"
           size="sm"
           onClick={logout}
-          className="w-full justify-start rounded-lg text-slate-400 hover:bg-red-500/10 hover:text-red-300"
+          title="Sign Out"
+          className={cn(
+            'h-8 w-full rounded-lg text-xs font-medium text-stone-500 hover:bg-[#E7E4DC]/70 hover:text-stone-900',
+            collapsed ? 'justify-center px-0' : 'justify-start px-2'
+          )}
         >
-          <LogOut className="mr-2 h-4 w-4" />
-          Sign Out
+          <LogOut className={cn('h-3.5 w-3.5', !collapsed && 'mr-2')} />
+          {!collapsed && 'Sign Out'}
         </Button>
       </div>
     </Sidebar>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, UserPlus, Trash2, X, ShieldCheck, Headset, UserRound } from 'lucide-react';
+import { Search, UserPlus, Trash2, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { CreateUserModal } from '@/components/users/CreateUserModal';
@@ -40,7 +40,7 @@ function nameColor(name: string): string {
 }
 
 const roleStyles: Record<string, string> = {
-  admin: 'text-indigo-600',
+  admin: 'text-blue-600',
   agent: 'text-blue-600',
   requester: 'text-emerald-600',
 };
@@ -101,97 +101,109 @@ export function UsersPage() {
     }
   };
 
-  const filtered = users.filter((entry) =>
-    `${entry.name} ${entry.email}`.toLowerCase().includes(query.toLowerCase())
-  );
+  const [roleFilter, setRoleFilter] = useState<string>('');
+
+  const filtered = users.filter((entry) => {
+    const matchesQuery = `${entry.name} ${entry.email}`.toLowerCase().includes(query.toLowerCase());
+    const matchesRole = !roleFilter || entry.role === roleFilter;
+    return matchesQuery && matchesRole;
+  });
   const count = (role: string) => users.filter((entry) => entry.role === role).length;
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">Users</h1>
-          <p className="mt-1 text-sm text-slate-500">{users.length} users across all roles</p>
+          <h1 className="text-2xl font-bold tracking-[-0.02em] text-stone-900">Users</h1>
+          <p className="mt-1 text-sm text-stone-500">{users.length} users across all roles</p>
         </div>
-        <Button onClick={() => setCreateOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white">
-          <UserPlus className="mr-2 h-4 w-4" />
+        <Button onClick={() => setCreateOpen(true)} className="h-9 bg-[#0F766E] px-3.5 text-sm font-semibold text-white hover:bg-[#115E59]">
+          <UserPlus className="mr-1.5 h-4 w-4" />
           Add User
         </Button>
       </div>
 
-      {/* Stat Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      {/* Interactive Role Summary Strip */}
+      <div className="grid grid-cols-2 divide-y divide-[#E5E2DA] overflow-hidden rounded-xl border border-[#E5E2DA] bg-white md:grid-cols-4 md:divide-x md:divide-y-0">
         {[
-          { role: 'admin', label: 'Administrators', color: 'text-indigo-600', iconBg: 'bg-indigo-50 text-indigo-600', Icon: ShieldCheck },
-          { role: 'agent', label: 'Support Agents', color: 'text-blue-600', iconBg: 'bg-blue-50 text-blue-600', Icon: Headset },
-          { role: 'requester', label: 'Requesters', color: 'text-emerald-600', iconBg: 'bg-emerald-50 text-emerald-600', Icon: UserRound },
-        ].map(({ role, label, color, iconBg, Icon }) => (
-          <div key={role} className="rounded-xl border border-slate-200/90 bg-white p-5 shadow-xs transition-all hover:border-slate-300 hover:shadow-sm">
-            <div className="flex items-center justify-between">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{label}</p>
-              <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${iconBg}`}>
-                <Icon className="h-4 w-4" />
-              </div>
-            </div>
-            <p className={`mt-3 text-3xl font-extrabold tabular-nums tracking-tight ${color}`}>{count(role)}</p>
-          </div>
-        ))}
+          { role: '', label: 'All Users', value: users.length, dot: 'bg-stone-400' },
+          { role: 'admin', label: 'Administrators', value: count('admin'), dot: 'bg-stone-900' },
+          { role: 'agent', label: 'Support Agents', value: count('agent'), dot: 'bg-blue-600' },
+          { role: 'requester', label: 'Requesters', value: count('requester'), dot: 'bg-emerald-500' },
+        ].map(({ role, label, value, dot }) => {
+          const active = roleFilter === role;
+          return (
+            <button
+              key={label}
+              type="button"
+              onClick={() => setRoleFilter((prev) => (prev === role ? '' : role))}
+              className={`relative px-5 py-4 text-left transition-colors hover:bg-stone-50/80 ${active ? 'bg-stone-50/90' : ''}`}
+            >
+              <p className="flex items-center gap-2 text-xs font-medium text-stone-500">
+                <span className={`h-2 w-2 rounded-full ${dot}`} />
+                {label}
+              </p>
+              <p className="mt-2 text-2xl font-bold tabular-nums tracking-[-0.02em] text-stone-900">{value}</p>
+              {active && <span className="absolute inset-x-0 bottom-0 h-0.5 bg-stone-900" aria-hidden="true" />}
+            </button>
+          );
+        })}
       </div>
 
       {/* Unified Search + Users Table Card */}
-      <div className="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-xs">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50/70 px-4 py-3.5 sm:px-5">
+      <div className="overflow-hidden rounded-xl border border-[#E5E2DA] bg-white">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E5E2DA] bg-stone-50/60 px-4 py-3 sm:px-5">
           <div className="relative w-full max-w-sm">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-stone-400" />
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search users..."
-              className="h-9 w-full rounded-lg border border-slate-300/90 bg-white pl-9 pr-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none transition-shadow focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+              className="h-9 w-full rounded-lg border border-[#E5E2DA] bg-white pl-9 pr-3 text-sm text-stone-900 placeholder:text-stone-400 outline-none transition-shadow focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15"
             />
           </div>
-          <span className="inline-flex items-center rounded-full bg-slate-200/70 px-2.5 py-1 text-xs font-semibold tabular-nums text-slate-600">
+          <span className="text-xs font-medium tabular-nums text-stone-500">
             {filtered.length} {filtered.length === 1 ? 'result' : 'results'}
           </span>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-200/80 bg-slate-50/50 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+            <thead className="border-b border-[#E5E2DA] bg-stone-50/40 text-[11px] font-semibold uppercase tracking-wider text-stone-500">
               <tr>
-                <th className="px-5 py-3.5">User</th>
-                <th className="px-5 py-3.5">Email</th>
-                <th className="px-5 py-3.5">Role</th>
-                <th className="px-5 py-3.5">Department</th>
-                <th className="px-5 py-3.5 text-right">Actions</th>
+                <th className="px-5 py-3">User</th>
+                <th className="px-5 py-3">Email</th>
+                <th className="px-5 py-3">Role</th>
+                <th className="px-5 py-3">Department</th>
+                <th className="px-5 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-stone-100">
               {filtered.map((entry) => (
-                <tr key={entry.id} className="transition-colors hover:bg-slate-50/90">
-                  <td className="px-5 py-4 whitespace-nowrap">
+                <tr key={entry.id} className="transition-colors hover:bg-stone-50/80">
+                  <td className="px-5 py-3.5 whitespace-nowrap">
                     <div className="flex items-center gap-3">
                       <Avatar name={entry.name} color={nameColor(entry.name)} />
-                      <span className="font-semibold text-slate-900">{entry.name}</span>
+                      <span className="font-semibold text-stone-900">{entry.name}</span>
                     </div>
                   </td>
-                  <td className="px-5 py-4 text-sm text-slate-500 whitespace-nowrap">{entry.email}</td>
-                  <td className="px-5 py-4 whitespace-nowrap">
-                    <span className={`text-sm font-semibold ${roleStyles[entry.role] ?? 'text-slate-500'}`}>
+                  <td className="px-5 py-3.5 text-[13px] text-stone-500 whitespace-nowrap">{entry.email}</td>
+                  <td className="px-5 py-3.5 whitespace-nowrap">
+                    <span className={`text-[13px] font-semibold ${roleStyles[entry.role] ?? 'text-stone-500'}`}>
                       {roleLabels[entry.role] ?? entry.role}
                     </span>
                   </td>
-                  <td className="px-5 py-4 text-sm text-slate-500 whitespace-nowrap">
+                  <td className="px-5 py-3.5 text-[13px] text-stone-500 whitespace-nowrap">
                     {entry.role === 'admin'
                       ? 'All departments'
                       : entry.department?.name ?? '—'}
                   </td>
-                  <td className="px-5 py-4 whitespace-nowrap text-right">
-                    <div className="flex items-center justify-end gap-3">
+                  <td className="px-5 py-3.5 whitespace-nowrap text-right">
+                    <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => setEditUser(entry)}
-                        className="rounded-md px-2 py-1 text-xs font-semibold text-indigo-600 transition-colors hover:bg-indigo-50 hover:text-indigo-700"
+                        className="rounded-md px-2 py-1 text-xs font-semibold text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700"
                       >
                         Edit
                       </button>
@@ -226,28 +238,28 @@ export function UsersPage() {
 
       {/* Delete User Confirmation */}
       {deleteUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/70 backdrop-blur-sm animate-in fade-in duration-200">
           <div
-            className="w-full max-w-sm bg-white rounded-xl border border-slate-200 shadow-2xl p-6 space-y-4"
+            className="w-full max-w-sm bg-white rounded-xl border border-[#E5E2DA] shadow-2xl p-6 space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+            <div className="flex items-center justify-between border-b border-[#E5E2DA] pb-3">
               <div className="flex items-center gap-2 text-red-600 font-bold">
                 <Trash2 className="w-5 h-5" />
                 <span>Remove User</span>
               </div>
               <button
                 onClick={() => setDeleteUser(null)}
-                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg"
+                className="text-stone-400 hover:text-stone-700 p-1 rounded-lg"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-sm text-slate-500">
-              Are you sure you want to remove <strong className="text-slate-800">{deleteUser.name}</strong>? This action cannot be undone.
+            <p className="text-sm text-stone-500">
+              Are you sure you want to remove <strong className="text-stone-800">{deleteUser.name}</strong>? This action cannot be undone.
             </p>
             <div className="flex items-center justify-end gap-2 pt-2">
-              <Button variant="ghost" size="sm" onClick={() => setDeleteUser(null)} className="text-slate-500 hover:text-slate-800 hover:bg-slate-100">
+              <Button variant="ghost" size="sm" onClick={() => setDeleteUser(null)} className="text-stone-500 hover:text-stone-800 hover:bg-stone-100">
                 Cancel
               </Button>
               <Button variant="destructive" size="sm" onClick={handleDelete} disabled={deleteLoading} className="bg-red-600 hover:bg-red-700 text-white">

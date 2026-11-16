@@ -228,267 +228,268 @@ export const ProfilePage = () => {
   const detailsDirty = name.trim() !== user?.name || email.trim() !== user?.email;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900">Profile</h1>
-        <p className="mt-1 text-sm text-slate-500">Manage your account settings and preferences.</p>
+        <h1 className="text-2xl font-bold tracking-[-0.02em] text-stone-900">Profile</h1>
+        <p className="mt-1 text-sm text-stone-500">Manage your account settings and preferences.</p>
       </div>
 
-      {/* Profile Summary Card */}
-      <Card className="shadow-sm border-slate-200">
-        <CardContent className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-lg font-bold text-white">
-              {initials}
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-lg font-bold text-slate-900">{user?.name}</h2>
-                <SupportBadge category="role" value={user?.role ?? 'requester'} />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Left column: Profile Summary */}
+        <div>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex flex-col items-start gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#0F766E] text-lg font-bold text-white">
+                  {initials}
+                </div>
+                <div className="min-w-0 w-full">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-lg font-bold text-stone-900">{user?.name}</h2>
+                    <SupportBadge category="role" value={user?.role ?? 'requester'} />
+                  </div>
+                  <p className="mt-1 truncate text-sm text-stone-500">{user?.email}</p>
+                  {memberSince && (
+                    <p className="mt-3 border-t border-stone-100 pt-3 text-xs text-stone-400">
+                      Member since {memberSince}
+                    </p>
+                  )}
+                </div>
               </div>
-              <p className="mt-0.5 truncate text-sm text-slate-500">{user?.email}</p>
-              {memberSince && (
-                <p className="mt-0.5 text-xs text-slate-400">Member since {memberSince}</p>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Account Details Card */}
-      <Card className="shadow-sm border-slate-200">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <UserRound className="h-4 w-4 text-slate-500" />
-            <CardTitle className="text-base text-slate-900">Account Details</CardTitle>
-          </div>
-          <CardDescription>Update your name and email address.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {detailsError && (
-            <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-              {detailsError}
-            </div>
-          )}
-
-          {detailsSuccess && (
-            <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
-              {detailsSuccess}
-            </div>
-          )}
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <label htmlFor="profile-name" className="text-xs font-semibold text-slate-600">
-                Full Name
-              </label>
-              <Input
-                id="profile-name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                disabled={savingDetails}
-                className="bg-white border-slate-300 text-slate-800"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label htmlFor="profile-email" className="text-xs font-semibold text-slate-600">
-                Email Address
-              </label>
-              <Input
-                id="profile-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={savingDetails}
-                className="bg-white border-slate-300 text-slate-800"
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end pt-1">
-            <Button
-              onClick={handleSaveDetails}
-              disabled={savingDetails || !detailsDirty}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white"
-            >
-              {savingDetails && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Save Details
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Department Card */}
-      <Card className="shadow-sm border-slate-200">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-slate-500" />
-            <CardTitle className="text-base text-slate-900">Department</CardTitle>
-          </div>
-          {user?.role === 'requester' ? (
-            <CardDescription>
-              Select the department your support requests belong to. Required before submitting tickets.
-            </CardDescription>
-          ) : (
-            <CardDescription>Assigned by administrators.</CardDescription>
-          )}
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {departmentsLoading ? (
-            <div className="flex items-center gap-2 text-sm text-slate-500">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Loading departments...
-            </div>
-          ) : user?.role === 'requester' ? (
-            <>
-              {departmentError && (
+        {/* Right column: Settings Forms */}
+        <div className="space-y-6 lg:col-span-2">
+          {/* Account Details Card */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <UserRound className="h-4 w-4 text-stone-500" />
+                <CardTitle className="text-base text-stone-900">Account Details</CardTitle>
+              </div>
+              <CardDescription>Update your name and email address.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {detailsError && (
                 <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
                   <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                  {departmentError}
+                  {detailsError}
                 </div>
               )}
 
-              {departmentSuccess && (
+              {detailsSuccess && (
                 <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
-                  {departmentSuccess}
+                  {detailsSuccess}
                 </div>
               )}
 
-              <div className="space-y-1.5">
-                <label htmlFor="profile-department" className="text-xs font-semibold text-slate-600">
-                  Department Assignment
-                </label>
-                <select
-                  id="profile-department"
-                  value={selectedDepartment}
-                  onChange={(e) => setSelectedDepartment(e.target.value)}
-                  disabled={savingDepartment}
-                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent disabled:opacity-50 disabled:bg-slate-50"
-                >
-                  <option value="">-- Select your department --</option>
-                  {departments.map((dept) => (
-                    <option key={dept.id} value={dept.id.toString()}>
-                      {dept.name}
-                    </option>
-                  ))}
-                </select>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <label htmlFor="profile-name" className="text-xs font-semibold text-stone-600">
+                    Full Name
+                  </label>
+                  <Input
+                    id="profile-name"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    disabled={savingDetails}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label htmlFor="profile-email" className="text-xs font-semibold text-stone-600">
+                    Email Address
+                  </label>
+                  <Input
+                    id="profile-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={savingDetails}
+                  />
+                </div>
               </div>
 
               <div className="flex justify-end pt-1">
                 <Button
-                  onClick={handleSaveDepartment}
-                  disabled={
-                    savingDepartment ||
-                    !selectedDepartment ||
-                    selectedDepartment === user?.department_id?.toString()
-                  }
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                  onClick={handleSaveDetails}
+                  disabled={savingDetails || !detailsDirty}
                 >
-                  {savingDepartment && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Save Department
+                  {savingDetails && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Save Details
                 </Button>
               </div>
-            </>
-          ) : (
-            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm">
-              <span className="text-slate-500">Current department: </span>
-              <span className="font-semibold text-slate-800">
-                {currentDepartmentName ?? '—'}
-              </span>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
 
-      {/* Change Password Card */}
-      <Card className="shadow-sm border-slate-200">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <KeyRound className="h-4 w-4 text-slate-500" />
-            <CardTitle className="text-base text-slate-900">Change Password</CardTitle>
-          </div>
-          <CardDescription>
-            Choose a strong password of at least 8 characters.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {passwordError && (
-            <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-              {passwordError}
-            </div>
-          )}
+          {/* Department Card */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-stone-500" />
+                <CardTitle className="text-base text-stone-900">Department</CardTitle>
+              </div>
+              {user?.role === 'requester' ? (
+                <CardDescription>
+                  Select the department your support requests belong to. Required before submitting tickets.
+                </CardDescription>
+              ) : (
+                <CardDescription>Assigned by administrators.</CardDescription>
+              )}
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {departmentsLoading ? (
+                <div className="flex items-center gap-2 text-sm text-stone-500">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading departments...
+                </div>
+              ) : user?.role === 'requester' ? (
+                <>
+                  {departmentError && (
+                    <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                      {departmentError}
+                    </div>
+                  )}
 
-          {passwordSuccess && (
-            <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
-              {passwordSuccess}
-            </div>
-          )}
+                  {departmentSuccess && (
+                    <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 shrink-0" />
+                      {departmentSuccess}
+                    </div>
+                  )}
 
-          <div className="space-y-1.5">
-            <label htmlFor="current-password" className="text-xs font-semibold text-slate-600">
-              Current Password
-            </label>
-            <Input
-              id="current-password"
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              disabled={savingPassword}
-              autoComplete="current-password"
-              className="bg-white border-slate-300 text-slate-800"
-            />
-          </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="profile-department" className="text-xs font-semibold text-stone-600">
+                      Department Assignment
+                    </label>
+                    <select
+                      id="profile-department"
+                      value={selectedDepartment}
+                      onChange={(e) => setSelectedDepartment(e.target.value)}
+                      disabled={savingDepartment}
+                      className="dark-select w-full rounded-lg border px-3 py-2 text-sm disabled:opacity-50 disabled:bg-stone-50"
+                    >
+                      <option value="">-- Select your department --</option>
+                      {departments.map((dept) => (
+                        <option key={dept.id} value={dept.id.toString()}>
+                          {dept.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <label htmlFor="new-password" className="text-xs font-semibold text-slate-600">
-                New Password
-              </label>
-              <Input
-                id="new-password"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                disabled={savingPassword}
-                autoComplete="new-password"
-                className="bg-white border-slate-300 text-slate-800"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label htmlFor="confirm-password" className="text-xs font-semibold text-slate-600">
-                Confirm New Password
-              </label>
-              <Input
-                id="confirm-password"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                disabled={savingPassword}
-                autoComplete="new-password"
-                className="bg-white border-slate-300 text-slate-800"
-              />
-            </div>
-          </div>
+                  <div className="flex justify-end pt-1">
+                    <Button
+                      onClick={handleSaveDepartment}
+                      disabled={
+                        savingDepartment ||
+                        !selectedDepartment ||
+                        selectedDepartment === user?.department_id?.toString()
+                      }
+                    >
+                      {savingDepartment && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                      Save Department
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="rounded-lg border border-[#E5E2DA] bg-stone-50 px-3 py-2.5 text-sm">
+                  <span className="text-stone-500">Current department: </span>
+                  <span className="font-semibold text-stone-900">
+                    {currentDepartmentName ?? '—'}
+                  </span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-          <div className="flex justify-end pt-1">
-            <Button
-              onClick={handleChangePassword}
-              disabled={savingPassword || !currentPassword || !newPassword || !confirmPassword}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white"
-            >
-              {savingPassword && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Update Password
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          {/* Change Password Card */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <KeyRound className="h-4 w-4 text-stone-500" />
+                <CardTitle className="text-base text-stone-900">Change Password</CardTitle>
+              </div>
+              <CardDescription>
+                Choose a strong password of at least 8 characters.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {passwordError && (
+                <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                  {passwordError}
+                </div>
+              )}
+
+              {passwordSuccess && (
+                <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  {passwordSuccess}
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label htmlFor="current-password" className="text-xs font-semibold text-stone-600">
+                  Current Password
+                </label>
+                <Input
+                  id="current-password"
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  disabled={savingPassword}
+                  autoComplete="current-password"
+                />
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <label htmlFor="new-password" className="text-xs font-semibold text-stone-600">
+                    New Password
+                  </label>
+                  <Input
+                    id="new-password"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    disabled={savingPassword}
+                    autoComplete="new-password"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label htmlFor="confirm-password" className="text-xs font-semibold text-stone-600">
+                    Confirm New Password
+                  </label>
+                  <Input
+                    id="confirm-password"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    disabled={savingPassword}
+                    autoComplete="new-password"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-1">
+                <Button
+                  onClick={handleChangePassword}
+                  disabled={savingPassword || !currentPassword || !newPassword || !confirmPassword}
+                >
+                  {savingPassword && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Update Password
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };

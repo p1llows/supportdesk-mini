@@ -10,15 +10,15 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'default', size = 'default', ...props }, ref) => {
     const baseStyles =
-      'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer';
+      'inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0F766E] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer';
 
     const variants = {
-      default: 'bg-indigo-700 text-white hover:bg-indigo-800 shadow-sm',
-      destructive: 'bg-red-600 text-slate-50 hover:bg-red-600/90 shadow-sm',
+      default: 'bg-[#0F766E] text-white hover:bg-[#115E59]',
+      destructive: 'bg-red-600 text-white hover:bg-red-700',
       outline:
-        'border border-slate-200 bg-white hover:bg-slate-100 hover:text-slate-900',
-      secondary: 'bg-slate-100 text-slate-900 hover:bg-slate-100/80',
-      ghost: 'hover:bg-slate-100 hover:text-slate-900',
+        'border border-[#E5E2DA] bg-white text-stone-800 hover:bg-[#F7F6F2] hover:text-stone-950',
+      secondary: 'bg-[#EFECE6] text-stone-900 hover:bg-[#E5E2DA]',
+      ghost: 'text-stone-600 hover:bg-[#EFECE6] hover:text-stone-900',
     };
 
     const sizes = {

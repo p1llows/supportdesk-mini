@@ -128,7 +128,7 @@ export function NotificationBell({ className }: { className?: string }) {
             fetchNotifications().finally(() => setLoading(false));
           }
         }}
-        className="relative rounded-md p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+        className="relative rounded-md p-2 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
         aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
       >
         <Bell className="h-5 w-5" />
@@ -140,14 +140,14 @@ export function NotificationBell({ className }: { className?: string }) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl">
-          <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-            <span className="text-sm font-bold text-slate-900">Notifications</span>
+        <div className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-2xl">
+          <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-3">
+            <span className="text-sm font-bold text-zinc-900">Notifications</span>
             {unreadCount > 0 && (
               <button
                 type="button"
                 onClick={markAllRead}
-                className="flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700"
+                className="flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
               >
                 <CheckCheck className="h-3.5 w-3.5" />
                 Mark all read
@@ -157,11 +157,11 @@ export function NotificationBell({ className }: { className?: string }) {
 
           <div className="max-h-96 overflow-y-auto">
             {loading && notifications.length === 0 && (
-              <p className="px-4 py-6 text-center text-xs text-slate-400">Loading notifications...</p>
+              <p className="px-4 py-6 text-center text-xs text-zinc-400">Loading notifications...</p>
             )}
 
             {!loading && notifications.length === 0 && (
-              <p className="px-4 py-6 text-center text-xs text-slate-400">No notifications yet.</p>
+              <p className="px-4 py-6 text-center text-xs text-zinc-400">No notifications yet.</p>
             )}
 
             {notifications.map((notification) => (
@@ -170,19 +170,19 @@ export function NotificationBell({ className }: { className?: string }) {
                 type="button"
                 onClick={() => markRead(notification)}
                 className={cn(
-                  'block w-full border-b border-slate-100 px-4 py-3 text-left transition-colors last:border-0 hover:bg-slate-50',
-                  !notification.is_read && 'bg-indigo-50/70'
+                  'block w-full border-b border-zinc-100 px-4 py-3 text-left transition-colors last:border-0 hover:bg-zinc-50',
+                  !notification.is_read && 'bg-blue-50/70'
                 )}
               >
                 <div className="flex items-start gap-2.5">
                   {!notification.is_read && (
-                    <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-indigo-500" />
+                    <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-500" />
                   )}
                   <div className="min-w-0">
-                    <p className={cn('text-xs leading-relaxed', notification.is_read ? 'text-slate-500' : 'font-semibold text-slate-800')}>
+                    <p className={cn('text-xs leading-relaxed', notification.is_read ? 'text-zinc-500' : 'font-semibold text-zinc-800')}>
                       {notification.message}
                     </p>
-                    <p className="mt-0.5 text-[10px] text-slate-400">{relativeTime(notification.created_at)}</p>
+                    <p className="mt-0.5 text-[10px] text-zinc-400">{relativeTime(notification.created_at)}</p>
                   </div>
                 </div>
               </button>

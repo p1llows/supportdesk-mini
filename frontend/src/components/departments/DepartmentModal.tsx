@@ -119,22 +119,22 @@ export const DepartmentModal = ({ isOpen, department, onClose, onSuccess }: Depa
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto">
       <div
-        className="w-full max-w-lg bg-white rounded-xl border border-slate-200 shadow-2xl overflow-hidden my-auto"
+        className="w-full max-w-lg bg-white rounded-xl border border-zinc-200 shadow-2xl overflow-hidden my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50">
+        <div className="flex items-center justify-between p-5 border-b border-zinc-100 bg-zinc-50/50">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
+            <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900">
+              <h2 className="text-base font-bold text-zinc-900">
                 {isEditing ? 'Edit Department' : 'Create Department'}
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-zinc-500">
                 {isEditing 
                   ? 'Update department details' 
                   : 'Add a new department along with its initial support agent'}
@@ -143,7 +143,7 @@ export const DepartmentModal = ({ isOpen, department, onClose, onSuccess }: Depa
           </div>
           <button
             onClick={handleClose}
-            className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-all"
+            className="text-zinc-400 hover:text-zinc-600 p-1.5 rounded-lg hover:bg-zinc-100 transition-all"
             disabled={loading}
           >
             <X className="w-5 h-5" />
@@ -170,13 +170,13 @@ export const DepartmentModal = ({ isOpen, department, onClose, onSuccess }: Depa
 
           {/* Department Info Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2">
-              <Building2 className="w-4 h-4 text-slate-500" />
+            <h3 className="text-sm font-bold text-zinc-900 flex items-center gap-2 border-b border-zinc-100 pb-2">
+              <Building2 className="w-4 h-4 text-zinc-500" />
               Department Details
             </h3>
             
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-700">Department Name</label>
+              <label className="text-xs font-semibold text-zinc-700">Department Name</label>
               <Input
                 type="text"
                 placeholder="e.g. Information Technology"
@@ -194,16 +194,16 @@ export const DepartmentModal = ({ isOpen, department, onClose, onSuccess }: Depa
           {/* Agent Info Section (Only on Create) */}
           {!isEditing && (
             <div className="space-y-4 pt-4">
-              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-2">
-                <UserPlus className="w-4 h-4 text-slate-500" />
+              <h3 className="text-sm font-bold text-zinc-900 flex items-center gap-2 border-b border-zinc-100 pb-2">
+                <UserPlus className="w-4 h-4 text-zinc-500" />
                 Initial Support Agent
               </h3>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-zinc-500">
                 A department must be created with an initial agent to manage its queue.
               </p>
               
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700">Agent Full Name</label>
+                <label className="text-xs font-semibold text-zinc-700">Agent Full Name</label>
                 <Input
                   type="text"
                   placeholder="e.g. Sarah Jenkins"
@@ -218,7 +218,7 @@ export const DepartmentModal = ({ isOpen, department, onClose, onSuccess }: Depa
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700">Agent Email Address</label>
+                <label className="text-xs font-semibold text-zinc-700">Agent Email Address</label>
                 <Input
                   type="email"
                   placeholder="e.g. sarah.it@supportdesk.local"
@@ -233,7 +233,7 @@ export const DepartmentModal = ({ isOpen, department, onClose, onSuccess }: Depa
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700">Agent Password</label>
+                <label className="text-xs font-semibold text-zinc-700">Agent Password</label>
                 <Input
                   type="password"
                   placeholder="At least 8 characters"
@@ -251,7 +251,7 @@ export const DepartmentModal = ({ isOpen, department, onClose, onSuccess }: Depa
           )}
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-2 pt-4 mt-6 border-t border-slate-100">
+          <div className="flex items-center justify-end gap-2 pt-4 mt-6 border-t border-zinc-100">
             <Button type="button" variant="outline" size="sm" onClick={handleClose} disabled={loading}>
               Cancel
             </Button>
@@ -259,7 +259,7 @@ export const DepartmentModal = ({ isOpen, department, onClose, onSuccess }: Depa
               type="submit"
               size="sm"
               disabled={loading}
-              className="bg-indigo-700 hover:bg-indigo-800 text-white"
+              className="bg-zinc-900 hover:bg-zinc-800 text-white"
             >
               {loading ? 'Saving...' : (isEditing ? 'Update Department' : 'Create Department & Agent')}
             </Button>
