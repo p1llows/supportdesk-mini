@@ -6,6 +6,7 @@ export interface User {
   email: string;
   role: 'admin' | 'agent' | 'requester';
   department_id?: number | null;
+  avatar_url?: string | null;
   created_at?: string;
 }
 

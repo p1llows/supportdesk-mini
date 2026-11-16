@@ -149,9 +149,17 @@ export function AppSidebar({ collapsed = false }: AppSidebarProps) {
               collapsed ? 'justify-center' : 'gap-2.5'
             )}
           >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0F766E] text-[11px] font-bold text-white">
-              {initials}
-            </div>
+            {user?.avatar_url ? (
+              <img
+                src={user.avatar_url}
+                alt={user.name}
+                className="h-8 w-8 shrink-0 rounded-full object-cover ring-1 ring-[#E5E2DA]"
+              />
+            ) : (
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0F766E] text-[11px] font-bold text-white">
+                {initials}
+              </div>
+            )}
             {!collapsed && (
               <div className="min-w-0">
                 <p className="truncate text-[13px] font-semibold text-stone-900">{user?.name}</p>

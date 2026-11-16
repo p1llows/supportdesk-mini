@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SupportBadge } from '@/components/ui/status-badges';
-import { Loader2, AlertCircle, CheckCircle2, KeyRound, UserRound, Building2 } from 'lucide-react';
+import { AvatarCropModal } from '@/components/profile/AvatarCropModal';
+import { Loader2, AlertCircle, CheckCircle2, KeyRound, UserRound, Building2, Camera, Trash2 } from 'lucide-react';
 
 interface DepartmentOption {
   id: number;
@@ -36,6 +37,12 @@ export const ProfilePage = () => {
   const [savingPassword, setSavingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
+
+  // Avatar upload state
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
 
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
@@ -206,6 +213,73 @@ export const ProfilePage = () => {
     }
   };
 
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setAvatarError('Please select a valid image file.');
+      return;
+    }
+
+    setAvatarError(null);
+    setPendingAvatarFile(file);
+  };
+
+  const handleConfirmAvatarCrop = async (croppedFile: File) => {
+    if (croppedFile.size > 2 * 1024 * 1024) {
+      setAvatarError('Cropped avatar image must be 2 MB or smaller.');
+      setPendingAvatarFile(null);
+      return;
+    }
+
+    setUploadingAvatar(true);
+    setAvatarError(null);
+    const formData = new FormData();
+    formData.append('avatar', croppedFile);
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/v1/profile/avatar`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: formData,
+      });
+      const result = await response.json();
+      if (response.ok && result.status === 'success') {
+        setPendingAvatarFile(null);
+        await checkSession();
+      } else {
+        setAvatarError(extractError(result, 'Failed to upload avatar'));
+      }
+    } catch (err: unknown) {
+      setAvatarError(err instanceof Error ? err.message : 'Network error uploading avatar');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    setUploadingAvatar(true);
+    setAvatarError(null);
+    try {
+      const response = await fetch(`${apiBaseUrl}/v1/profile/avatar`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+      });
+      const result = await response.json();
+      if (response.ok && result.status === 'success') {
+        await checkSession();
+      } else {
+        setAvatarError(extractError(result, 'Failed to remove avatar'));
+      }
+    } catch (err: unknown) {
+      setAvatarError(err instanceof Error ? err.message : 'Network error removing avatar');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   const initials = user?.name
     .split(' ')
     .map((n) => n[0])
@@ -239,15 +313,64 @@ export const ProfilePage = () => {
       <Card>
         <CardContent className="flex flex-wrap items-center justify-between gap-4 p-6">
           <div className="flex items-center gap-4 min-w-0">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#0F766E] text-lg font-bold text-white">
-              {initials}
-            </div>
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              onChange={handleAvatarChange}
+              className="hidden"
+              aria-label="Upload avatar image"
+            />
+            <button
+              type="button"
+              onClick={() => avatarInputRef.current?.click()}
+              disabled={uploadingAvatar}
+              title="Change profile photo"
+              className="group relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#0F766E] text-lg font-bold text-white ring-2 ring-[#E5E2DA] transition-opacity hover:opacity-90 disabled:opacity-60"
+            >
+              {user?.avatar_url ? (
+                <img src={user.avatar_url} alt={user.name} className="h-full w-full object-cover" />
+              ) : (
+                initials
+              )}
+              <span className="absolute inset-0 flex items-center justify-center bg-stone-950/45 opacity-0 transition-opacity group-hover:opacity-100">
+                {uploadingAvatar ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-white" />
+                ) : (
+                  <Camera className="h-4 w-4 text-white" />
+                )}
+              </span>
+            </button>
             <div className="min-w-0">
               <div className="flex items-center gap-2.5 flex-wrap">
                 <h2 className="text-lg font-bold text-stone-900">{user?.name}</h2>
                 <SupportBadge category="role" value={user?.role ?? 'requester'} />
               </div>
               <p className="mt-0.5 truncate text-sm text-stone-500">{user?.email}</p>
+              <div className="mt-2 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => avatarInputRef.current?.click()}
+                  disabled={uploadingAvatar}
+                  className="text-xs font-semibold text-[#0F766E] hover:underline disabled:opacity-50"
+                >
+                  {uploadingAvatar ? 'Uploading...' : user?.avatar_url ? 'Change photo' : 'Upload photo'}
+                </button>
+                {user?.avatar_url && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveAvatar}
+                    disabled={uploadingAvatar}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-stone-400 hover:text-red-600 disabled:opacity-50"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                    Remove
+                  </button>
+                )}
+              </div>
+              {avatarError && (
+                <p className="mt-1.5 text-xs font-medium text-red-600">{avatarError}</p>
+              )}
             </div>
           </div>
 
@@ -509,6 +632,13 @@ export const ProfilePage = () => {
           </Card>
         </section>
       </div>
+
+      <AvatarCropModal
+        file={pendingAvatarFile}
+        saving={uploadingAvatar}
+        onClose={() => setPendingAvatarFile(null)}
+        onConfirm={handleConfirmAvatarCrop}
+      />
     </div>
   );
 };
