@@ -18,31 +18,19 @@ interface UserData {
 }
 
 // Avatar initials
-function Avatar({ name, color }: { name: string; color: string }) {
+function Avatar({ name }: { name: string }) {
   const initials = name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
   return (
-    <div
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-      style={{ backgroundColor: color }}
-    >
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#E5E2DA] bg-[#F1EFE9] text-xs font-bold text-stone-700">
       {initials}
     </div>
   );
 }
 
-function nameColor(name: string): string {
-  const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6', '#06b6d4', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return colors[Math.abs(hash) % colors.length];
-}
-
 const roleStyles: Record<string, string> = {
-  admin: 'text-blue-600',
-  agent: 'text-blue-600',
-  requester: 'text-emerald-600',
+  admin: 'text-stone-900',
+  agent: 'text-[#0F766E]',
+  requester: 'text-stone-600',
 };
 
 const roleLabels: Record<string, string> = {
@@ -184,7 +172,7 @@ export function UsersPage() {
                 <tr key={entry.id} className="transition-colors hover:bg-stone-50/80">
                   <td className="px-5 py-3.5 whitespace-nowrap">
                     <div className="flex items-center gap-3">
-                      <Avatar name={entry.name} color={nameColor(entry.name)} />
+                      <Avatar name={entry.name} />
                       <span className="font-semibold text-stone-900">{entry.name}</span>
                     </div>
                   </td>

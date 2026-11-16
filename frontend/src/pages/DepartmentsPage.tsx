@@ -19,25 +19,13 @@ interface AgentData {
 }
 
 // Avatar initials
-function Avatar({ name, color }: { name: string; color: string }) {
+function Avatar({ name }: { name: string }) {
   const initials = name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
   return (
-    <div
-      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-      style={{ backgroundColor: color }}
-    >
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#E5E2DA] bg-[#F1EFE9] text-xs font-bold text-stone-700">
       {initials}
     </div>
   );
-}
-
-function nameColor(name: string): string {
-  const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6', '#06b6d4', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return colors[Math.abs(hash) % colors.length];
 }
 
 export const DepartmentsPage = () => {
@@ -185,7 +173,7 @@ export const DepartmentsPage = () => {
                 ) : (
                   deptAgents.map((agent) => (
                     <div key={agent.id} className="flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-stone-50">
-                      <Avatar name={agent.name} color={nameColor(agent.name)} />
+                      <Avatar name={agent.name} />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-stone-800">{agent.name}</p>
                         <p className="truncate text-xs text-stone-500">{agent.email}</p>

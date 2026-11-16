@@ -3,20 +3,20 @@ import { cn } from '@/lib/utils';
 
 const styles = {
   status: {
-    open: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    in_progress: 'bg-blue-50 text-blue-700 border-blue-200',
-    resolved: 'bg-zinc-100 text-zinc-700 border-zinc-200',
-    closed: 'bg-zinc-100 text-zinc-500 border-zinc-200',
+    open: 'bg-[#0F766E]/10 text-[#0F766E] border-[#0F766E]/20',
+    in_progress: 'bg-amber-50 text-amber-800 border-amber-200',
+    resolved: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    closed: 'bg-stone-100 text-stone-500 border-stone-200',
   },
   priority: {
-    low: 'bg-zinc-100 text-zinc-600 border-zinc-200',
-    medium: 'bg-amber-50 text-amber-700 border-amber-200',
+    low: 'bg-stone-100 text-stone-600 border-stone-200',
+    medium: 'bg-[#F7F6F2] text-stone-700 border-[#E5E2DA]',
     high: 'bg-red-50 text-red-700 border-red-200',
   },
   role: {
-    admin: 'bg-zinc-900 text-white border-zinc-900',
-    agent: 'bg-blue-50 text-blue-700 border-blue-200',
-    requester: 'bg-zinc-100 text-zinc-700 border-zinc-200',
+    admin: 'bg-stone-900 text-white border-stone-900',
+    agent: 'bg-[#0F766E]/10 text-[#0F766E] border-[#0F766E]/20',
+    requester: 'bg-stone-100 text-stone-700 border-stone-200',
   },
 } as const;
 

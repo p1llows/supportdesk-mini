@@ -42,7 +42,6 @@ export interface TicketData {
 type SortKey = 'id' | 'priority' | 'status' | 'created_at';
 type SortDir = 'asc' | 'desc';
 
-const PAGE_SIZE = 10;
 const priorityRank: Record<string, number> = { high: 3, medium: 2, low: 1 };
 const statusRank: Record<string, number> = { open: 1, in_progress: 2, resolved: 3, closed: 4 };
 
@@ -56,33 +55,20 @@ interface TicketsTableProps {
   onStatusChange?: (ticket: TicketData, newStatus: TicketData['status']) => void;
 }
 
-// Avatar initials component
-function Avatar({ name, color }: { name: string; color: string }) {
+// Avatar initials component — muted warm stone to keep the table calm and scannable
+function Avatar({ name }: { name: string }) {
   const initials = name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
   return (
-    <div
-      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
-      style={{ backgroundColor: color }}
-    >
+    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#E5E2DA] bg-[#F1EFE9] text-[10px] font-bold text-stone-700">
       {initials}
     </div>
   );
 }
 
-// Generate deterministic color from name
-function nameColor(name: string): string {
-  const colors = ['#6366f1', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6', '#06b6d4', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return colors[Math.abs(hash) % colors.length];
-}
-
 const priorityStyles: Record<string, string> = {
-  low: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
-  medium: 'bg-amber-50 text-amber-700 ring-amber-200',
-  high: 'bg-red-50 text-red-700 ring-red-200',
+  low: 'bg-stone-100/80 text-stone-500 ring-stone-200/80',
+  medium: 'bg-[#F7F6F2] text-stone-700 ring-[#E5E2DA]',
+  high: 'bg-red-50/80 text-red-700 ring-red-200/80',
 };
 
 const priorityLabels: Record<string, string> = {
@@ -92,10 +78,10 @@ const priorityLabels: Record<string, string> = {
 };
 
 const statusStyles: Record<string, { dot: string; text: string; pill: string }> = {
-  open: { dot: 'bg-emerald-500', text: 'text-emerald-700', pill: 'bg-emerald-50 text-emerald-700 ring-emerald-200' },
-  in_progress: { dot: 'bg-blue-500', text: 'text-blue-700', pill: 'bg-blue-50 text-blue-700 ring-blue-200' },
-  resolved: { dot: 'bg-purple-500', text: 'text-purple-700', pill: 'bg-purple-50 text-purple-700 ring-purple-200' },
-  closed: { dot: 'bg-slate-400', text: 'text-slate-600', pill: 'bg-slate-100 text-slate-600 ring-slate-200' },
+  open: { dot: 'bg-[#0F766E]', text: 'text-stone-800', pill: 'bg-[#0F766E]/8 text-[#0F766E] ring-[#0F766E]/20' },
+  in_progress: { dot: 'bg-amber-600', text: 'text-stone-800', pill: 'bg-amber-50/80 text-amber-800 ring-amber-200/80' },
+  resolved: { dot: 'bg-emerald-600', text: 'text-stone-700', pill: 'bg-emerald-50/70 text-emerald-800 ring-emerald-200/80' },
+  closed: { dot: 'bg-stone-400', text: 'text-stone-500', pill: 'bg-stone-100 text-stone-500 ring-stone-200' },
 };
 
 const statusLabels: Record<string, string> = {
@@ -138,6 +124,7 @@ export const TicketsTable: React.FC<TicketsTableProps> = ({
   const [sortKey, setSortKey] = useState<SortKey>('created_at');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -167,7 +154,7 @@ export const TicketsTable: React.FC<TicketsTableProps> = ({
     return copy;
   }, [tickets, sortKey, sortDir]);
 
-  const totalPages = Math.max(1, Math.ceil(sortedTickets.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(sortedTickets.length / pageSize));
   const safePage = Math.min(page, totalPages);
 
   useEffect(() => {
@@ -176,7 +163,7 @@ export const TicketsTable: React.FC<TicketsTableProps> = ({
     }
   }, [page, totalPages]);
 
-  const paginatedTickets = sortedTickets.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const paginatedTickets = sortedTickets.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   const SortIcon = ({ column }: { column: SortKey }) => {
     if (sortKey !== column) return <ArrowUpDown className="h-3 w-3 text-stone-300" />;
@@ -306,7 +293,7 @@ export const TicketsTable: React.FC<TicketsTableProps> = ({
                     </Link>
                     {ticket.description && (
                       <p className="mt-0.5 line-clamp-1 text-xs text-stone-500">
-                        {ticket.description}
+                        {ticket.description.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()}
                       </p>
                     )}
                   </td>
@@ -343,7 +330,7 @@ export const TicketsTable: React.FC<TicketsTableProps> = ({
                   <td className="px-4 py-3.5 whitespace-nowrap">
                     {ticket.assignee ? (
                       <div className="flex items-center gap-2">
-                        <Avatar name={ticket.assignee.name} color={nameColor(ticket.assignee.name)} />
+                        <Avatar name={ticket.assignee.name} />
                         <span className="text-[13px] font-medium text-stone-700">{ticket.assignee.name}</span>
                       </div>
                     ) : (
@@ -353,7 +340,7 @@ export const TicketsTable: React.FC<TicketsTableProps> = ({
                   <td className="px-4 py-3.5 whitespace-nowrap">
                     {ticket.requester ? (
                       <div className="flex items-center gap-2">
-                        <Avatar name={ticket.requester.name} color={nameColor(ticket.requester.name)} />
+                        <Avatar name={ticket.requester.name} />
                         <span className="text-[13px] font-medium text-stone-700">{ticket.requester.name}</span>
                       </div>
                     ) : (
@@ -406,40 +393,57 @@ export const TicketsTable: React.FC<TicketsTableProps> = ({
         </table>
       </div>
 
-      {/* Pagination Bar */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between border-t border-[#E5E2DA] bg-[#FAF9F6] px-5 py-3 text-xs text-stone-500">
+      {/* Pagination Bar (always visible when tickets exist) */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#E5E2DA] bg-[#FAF9F6] px-5 py-3 text-xs text-stone-500">
+        <div className="flex items-center gap-3">
           <span className="tabular-nums">
-            Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, sortedTickets.length)} of{' '}
+            Showing {(safePage - 1) * pageSize + 1}–{Math.min(safePage * pageSize, sortedTickets.length)} of{' '}
             {sortedTickets.length}
           </span>
-          <div className="flex items-center gap-1.5">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={safePage <= 1}
-              className="h-7 px-2 text-xs"
+          <label className="inline-flex items-center gap-1.5">
+            <span>Rows</span>
+            <select
+              aria-label="Rows per page"
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setPage(1);
+              }}
+              className="dark-select h-7 rounded-md border px-1.5 text-xs font-medium"
             >
-              <ChevronLeft className="mr-0.5 h-3.5 w-3.5" />
-              Prev
-            </Button>
-            <span className="px-2 font-mono tabular-nums text-stone-700">
-              {safePage} / {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={safePage >= totalPages}
-              className="h-7 px-2 text-xs"
-            >
-              Next
-              <ChevronRight className="ml-0.5 h-3.5 w-3.5" />
-            </Button>
-          </div>
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </select>
+          </label>
         </div>
-      )}
+        <div className="flex items-center gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={safePage <= 1}
+            className="h-7 px-2 text-xs"
+          >
+            <ChevronLeft className="mr-0.5 h-3.5 w-3.5" />
+            Prev
+          </Button>
+          <span className="px-2 font-mono tabular-nums text-stone-700">
+            {safePage} / {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={safePage >= totalPages}
+            className="h-7 px-2 text-xs"
+          >
+            Next
+            <ChevronRight className="ml-0.5 h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </div>
 
       {/* Delete Ticket Confirmation Dialog */}
       {ticketToDelete && (
