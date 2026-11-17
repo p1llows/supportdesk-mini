@@ -109,6 +109,58 @@ select.dark-select option {
   }
 }
 
+@property --sd-trace {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes sd-trace {
+  to {
+    --sd-trace: 360deg;
+  }
+}
+
+@keyframes sd-sheen {
+  0%,
+  55% {
+    left: -120px;
+  }
+  100% {
+    left: 110%;
+  }
+}
+
+@keyframes sd-halo {
+  0% {
+    opacity: 0.85;
+    transform: scale(0.92);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.45);
+  }
+}
+
+@keyframes sd-drift {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(48px, 32px) scale(1.08);
+  }
+  100% {
+    transform: translate(-24px, 18px) scale(0.96);
+  }
+}
+
+@keyframes sd-breathe {
+  50% {
+    transform: scale(1.12);
+    opacity: 0.72;
+  }
+}
+
 .animate-sd-fade {
   animation: sd-fade 0.16s var(--ease) both;
 }
@@ -129,12 +181,109 @@ select.dark-select option {
   animation: sd-ping 1.8s ease-out infinite;
 }
 
+.sd-trace {
+  position: relative;
+}
+
+.sd-trace::before,
+.sd-trace::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 9px;
+  padding: 1.5px;
+  pointer-events: none;
+  background: conic-gradient(
+    from var(--sd-trace),
+    transparent 0deg 260deg,
+    rgba(15, 118, 110, 0) 265deg,
+    rgba(15, 118, 110, 0.45) 325deg,
+    #14b8a6 352deg,
+    #99f6e4 358deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: sd-trace 4.5s linear infinite;
+}
+
+.sd-trace::after {
+  inset: -3px;
+  padding: 4px;
+  border-radius: 11px;
+  filter: blur(6px);
+  opacity: 0.45;
+}
+
+.sd-sheen {
+  position: relative;
+  overflow: hidden;
+}
+
+.sd-sheen::after {
+  content: '';
+  position: absolute;
+  top: -20%;
+  left: -120px;
+  width: 80px;
+  height: 140%;
+  background: linear-gradient(110deg, transparent, rgba(255, 255, 255, 0.34), transparent);
+  transform: skewX(-18deg);
+  pointer-events: none;
+  animation: sd-sheen 4.2s ease-in-out infinite;
+}
+
+.sd-sheen:disabled::after {
+  animation: none;
+  display: none;
+}
+
+.sd-halo {
+  position: relative;
+}
+
+.sd-halo::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  border: 1.5px solid rgba(239, 68, 68, 0.55);
+  pointer-events: none;
+  animation: sd-halo 2.8s ease-out infinite;
+}
+
+.animate-sd-drift {
+  animation: sd-drift 18s ease-in-out infinite alternate;
+}
+
+.animate-sd-drift-reverse {
+  animation: sd-drift 22s ease-in-out infinite alternate-reverse;
+}
+
+.animate-sd-breathe {
+  animation: sd-breathe 5s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-sd-fade,
   .animate-sd-in,
   .animate-sd-auth,
   .animate-sd-drawer,
-  .animate-sd-ping {
+  .animate-sd-ping,
+  .animate-sd-drift,
+  .animate-sd-drift-reverse,
+  .animate-sd-breathe,
+  .sd-trace::before,
+  .sd-trace::after,
+  .sd-sheen::after,
+  .sd-halo::after {
     animation: none !important;
+  }
+  .sd-trace::after,
+  .sd-sheen::after,
+  .sd-halo::after {
+    display: none;
   }
 }

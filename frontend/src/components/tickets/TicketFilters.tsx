@@ -60,8 +60,8 @@ export const TicketFilters: React.FC<TicketFiltersProps> = ({
   return (
     <div className="flex flex-wrap items-center gap-2.5 border-b border-[#E5E2DA] bg-[#FAF9F6] px-4 py-3 sm:px-5">
       {/* Search Input */}
-      <div className="relative flex-1 min-w-[210px] max-w-sm">
-        <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-stone-400" />
+      <div className="sd-trace relative flex-1 min-w-[210px] max-w-sm rounded-lg">
+        <Search className="pointer-events-none absolute left-3 top-2.5 z-10 h-4 w-4 text-stone-400" />
         <input
           ref={searchInputRef}
           id="ticket-search"
@@ -69,19 +69,19 @@ export const TicketFilters: React.FC<TicketFiltersProps> = ({
           placeholder="Search tickets..."
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="h-9 w-full rounded-lg border border-[#E5E2DA] bg-white pl-9 pr-8 text-sm text-stone-900 placeholder:text-stone-400 outline-none transition-shadow focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/15"
+          className="relative h-9 w-full rounded-lg border border-[#E5E2DA] bg-white pl-9 pr-8 text-sm text-stone-900 placeholder:text-stone-400 outline-none transition-shadow focus:border-[#0F766E] focus:ring-2 focus:ring-[#0F766E]/15"
         />
         {search ? (
           <button
             type="button"
             onClick={() => onSearchChange('')}
             aria-label="Clear search"
-            className="absolute right-2.5 top-2.5 text-stone-400 hover:text-stone-700"
+            className="absolute right-2.5 top-2.5 z-10 text-stone-400 hover:text-stone-700"
           >
             <X className="h-4 w-4" />
           </button>
         ) : (
-          <kbd className="pointer-events-none absolute right-2.5 top-2 hidden rounded border border-[#E5E2DA] bg-[#F7F6F2] px-1.5 py-0.5 font-mono text-[10px] font-medium text-stone-400 sm:inline-block">
+          <kbd className="pointer-events-none absolute right-2.5 top-2 z-10 hidden rounded border border-[#E5E2DA] bg-[#F7F6F2] px-1.5 py-0.5 font-mono text-[10px] font-medium text-stone-400 sm:inline-block">
             /
           </kbd>
         )}
